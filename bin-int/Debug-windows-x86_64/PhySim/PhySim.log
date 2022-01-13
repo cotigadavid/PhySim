@@ -1,0 +1,4 @@
+﻿  ImGuiLayer.cpp
+D:\PhySim\PhySim\src\ImGui\ImGuiLayer.cpp(248,52): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+D:\PhySim\PhySim\src\ImGui\ImGuiLayer.cpp(248,37): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+  PhySim.vcxproj -> D:\PhySim\bin\Debug-windows-x86_64\PhySim\PhySim.exe
