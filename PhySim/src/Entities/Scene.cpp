@@ -5,6 +5,8 @@
 
 #include "Entities/Entity.h"
 
+#include "Core/Application.h"
+
 namespace PhySim {
 
 	Scene::Scene()
@@ -39,6 +41,8 @@ namespace PhySim {
 
 	void Scene::OnUpdate(Timestep ts)
 	{
+		Renderer2D::BeginScene(Application::Get().GetProjectionData());
+
 		for (Entity* entity : m_Entities)
 		{
 			Quad* quad = dynamic_cast<Quad*>(entity);
@@ -46,7 +50,7 @@ namespace PhySim {
 			{
 				Renderer2D::DrawQuad(quad->GetTransform(), quad->m_Color);
 
-				PS_ERROR("{0}", quad->m_Name);
+				//PS_ERROR("{0}", quad->m_Name);
 			}
 		}
 
@@ -58,6 +62,8 @@ namespace PhySim {
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+		Renderer2D::EndScene();
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)

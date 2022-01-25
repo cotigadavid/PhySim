@@ -20,6 +20,8 @@
 
 #include "LayerStack.h"
 
+#include "OpenGL/FrameBuffer.h"
+
 namespace PhySim {
 
 
@@ -40,6 +42,15 @@ namespace PhySim {
 
 		//ResultData& GetResultData() { return m_ResultData; }
 
+		void Close() { m_Running = false; }
+
+
+		ImGuiLayer* GetImGuiLayer() { return m_ImguiLayer; }
+
+		ProjectionData GetProjectionData() { return m_ProjectionData; }
+
+		void OnResize(float width, float height);
+
 	private:
 		bool OnWindowClosed(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
@@ -56,17 +67,16 @@ namespace PhySim {
 
 		std::shared_ptr<VertexArray> m_VertexArray;
 		std::shared_ptr<Texture> m_CheckerboardTexture, m_LogoTexture;
+		
 
 		ShaderLibrary m_ShaderLibrary;
 
 		static Application* s_Instance;
 
-		SceneHierarchyPanel m_SceneHierarchyPanel;
+		//SceneHierarchyPanel m_SceneHierarchyPanel;
 
 	public:
 		glm::vec3 Squarecolor;
 		std::shared_ptr<Scene> m_Scene;
-
-
 	};
 }

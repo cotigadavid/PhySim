@@ -21,17 +21,19 @@ namespace PhySim {
 
 		void OnImGuiRender();
 
+		Entity* GetSelectedEntity() const 
+		{
+			if (m_SelectionIndex == -1)
+				return nullptr;
+
+			return m_Context->m_Entities[m_SelectionIndex]; 
+		}
+	
 	private:
 		void DrawEntityNode(int index);
 		void DrawComponents(int index);
 
-		void NewScene();
-		void OpenScene();
-		void SaveSceneAs();
-
 	private:
-		int m_GizmoType = -1;
-
 		std::shared_ptr<Scene> m_Context;
 		int m_SelectionIndex;
 	};

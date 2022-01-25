@@ -14,9 +14,9 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-// DELETE
-#include "OpenGL/Renderer2D.h"
-// DELETE
+#ifdef _MSVC_LANG
+	#define _CRT_SECURE_NO_WARNINGS
+#endif
 
 namespace PhySim {
 
@@ -28,11 +28,12 @@ namespace PhySim {
 	void SceneHierarchyPanel::SetContext(const std::shared_ptr<Scene>& scene)
 	{
 		m_Context = scene;
+		m_SelectionIndex = -1;
 	}
 
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
-		ImGuiIO& io = ImGui::GetIO();
+		/*ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();
 
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
@@ -41,35 +42,9 @@ namespace PhySim {
 		ImGui::NewFrame();
 
 		static ImGuiWindowFlags flags = ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_MenuBar;
-		ImGui::SetNextWindowSize(ImVec2(500, 256));
+		ImGui::SetNextWindowSize(ImVec2(500, 256));*/
 
-		bool open;
-		ImGui::Begin("Scene Hierarchy", &open, flags);
-
-		
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("New", "Ctrl+N"))
-				{
-					NewScene();
-				}
-
-				if (ImGui::MenuItem("Open...", "Ctrl+O"))
-				{
-					OpenScene();
-				}
-
-				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
-				{
-					SaveSceneAs();
-				}
-
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenuBar();
-		}
+		ImGui::Begin("Scene Hierarchy");
 
 		for (uint32_t i = 0; i < m_Context->m_Entities.size(); ++i)
 		{
@@ -100,8 +75,8 @@ namespace PhySim {
 
 		ImGui::End();
 
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		//ImGui::Render();
+		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 	}
 
@@ -268,7 +243,7 @@ namespace PhySim {
 
 	}
 
-	void SceneHierarchyPanel::NewScene()
+	/*void SceneHierarchyPanel::NewScene()
 	{
 		m_Context->m_Entities.clear();
 		//m_Context = std::make_shared<Scene>();
@@ -309,7 +284,7 @@ namespace PhySim {
 		{
 			delete m_Context->m_Entities[i];
 			m_Context->m_Entities.pop_back();
-		}*/
+		}
 	}
 
 	void SceneHierarchyPanel::OpenScene()
@@ -335,5 +310,5 @@ namespace PhySim {
 			SceneSerializer serializer(m_Context);
 			serializer.Serialize(filepath);
 		}
-	}
+	}*/
 }

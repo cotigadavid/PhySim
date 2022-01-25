@@ -3,6 +3,8 @@
 #include "Core/Layer.h"
 #include "SceneHierarchyPanel.h"
 
+#include "OpenGL/FrameBuffer.h"
+
 namespace PhySim {
 
 	class EditorLayer : public Layer
@@ -17,13 +19,27 @@ namespace PhySim {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 			
+		std::shared_ptr<Framebuffer> m_Framebuffer;
+
 	private:
 
 		bool OnKeyPressed(KeyPressedEvent& e);
 
-		/*void NewScene();
+		void NewScene();
 		void OpenScene();
-		void SaveSceneAs();*/
+		void SaveSceneAs();
+
+	private:
+		std::shared_ptr<Scene> m_ActiveScene;
+		
+
+		bool m_ViewportFocused = false, m_ViewportHovered = false;
+		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+
+		int m_GizmoType = -1;
+
+		// Panels
+		SceneHierarchyPanel m_SceneHierarchyPanel;
 	};
 
 	/*class Layer

@@ -1,4 +1,19 @@
-﻿  ImGuiLayer.cpp
-D:\PhySim\PhySim\src\ImGui\ImGuiLayer.cpp(248,52): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
-D:\PhySim\PhySim\src\ImGui\ImGuiLayer.cpp(248,37): warning C4244: 'argument': conversion from 'unsigned int' to 'float', possible loss of data
+﻿  Application.cpp
+D:\PhySim\PhySim\src\Core\Application.cpp(156,27): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
+D:\PhySim\PhySim\src\Core\Application.cpp(156,20): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
+  Input.cpp
+  EditorLayer.cpp
+  SceneHierarchyPanel.cpp
+  Scene.cpp
+  ImGuiLayer.cpp
+  FrameBuffer.cpp
+D:\PhySim\PhySim\src\OpenGL\FrameBuffer.cpp(97,72): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\PhySim\PhySim\src\OpenGL\FrameBuffer.cpp(106,73): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\PhySim\PhySim\src\OpenGL\FrameBuffer.cpp(122,91): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+D:\PhySim\PhySim\src\OpenGL\FrameBuffer.cpp(130,138): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\PhySim\PhySim\src\OpenGL\FrameBuffer.cpp(152,52): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+  PlatformUtils.cpp
+  main.cpp
+  Generating Code...
+D:\PhySim\PhySim\src\Editor\EditorLayer.cpp(333): warning C4715: 'PhySim::EditorLayer::OnKeyPressed': not all control paths return a value
   PhySim.vcxproj -> D:\PhySim\bin\Debug-windows-x86_64\PhySim\PhySim.exe

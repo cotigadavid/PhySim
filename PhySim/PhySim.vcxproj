@@ -117,6 +117,7 @@
     <ClInclude Include="src\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Math\Math.h" />
     <ClInclude Include="src\OpenGL\Buffer.h" />
+    <ClInclude Include="src\OpenGL\FrameBuffer.h" />
     <ClInclude Include="src\OpenGL\OpenGLContext.h" />
     <ClInclude Include="src\OpenGL\Renderer.h" />
     <ClInclude Include="src\OpenGL\Renderer2D.h" />
@@ -568,6 +569,7 @@
     <ClCompile Include="src\ImGui\ImGuiLayer.cpp" />
     <ClCompile Include="src\Math\Math.cpp" />
     <ClCompile Include="src\OpenGL\Buffer.cpp" />
+    <ClCompile Include="src\OpenGL\FrameBuffer.cpp" />
     <ClCompile Include="src\OpenGL\OpenGLContext.cpp" />
     <ClCompile Include="src\OpenGL\Renderer.cpp" />
     <ClCompile Include="src\OpenGL\Renderer2D.cpp" />

@@ -1427,6 +1427,7 @@
     </ClInclude>
     <ClInclude Include="src\Math\Math.h" />
     <ClInclude Include="src\Editor\EditorLayer.h" />
+    <ClInclude Include="src\OpenGL\FrameBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Application.cpp">
@@ -1524,5 +1525,6 @@
     </ClCompile>
     <ClCompile Include="src\Math\Math.cpp" />
     <ClCompile Include="src\Editor\EditorLayer.cpp" />
+    <ClCompile Include="src\OpenGL\FrameBuffer.cpp" />
   </ItemGroup>
 </Project>
