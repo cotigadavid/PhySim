@@ -18,7 +18,6 @@ namespace PhySim {
 
 	void LayerStack::PushLayer(Layer* layer)
 	{
-		//layer->OnAttach();
 		m_Layers.emplace(m_Layers.begin() + m_LayerInsertIndex, layer);
 		m_LayerInsertIndex++;
 	}

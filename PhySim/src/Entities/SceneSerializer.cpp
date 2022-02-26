@@ -10,6 +10,29 @@
 namespace YAML {
 
 	template<>
+	struct convert<glm::vec2>
+	{
+		static Node encode(const glm::vec2& rhs)
+		{
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			node.SetStyle(EmitterStyle::Flow);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs)
+		{
+			if (!node.IsSequence() || node.size() != 2)
+				return false;
+
+			rhs.x = node[0].as<float>();
+			rhs.y = node[1].as<float>();
+			return true;
+		}
+	};
+
+	template<>
 	struct convert<glm::vec3>
 	{
 		static Node encode(const glm::vec3& rhs)
@@ -62,6 +85,13 @@ namespace YAML {
 
 namespace PhySim {
 
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
+	{
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << YAML::EndSeq;
+		return out;
+	}
+
 	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
 	{
 		out << YAML::Flow;
@@ -74,6 +104,29 @@ namespace PhySim {
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
 		return out;
+	}
+
+	static std::string RigidBody2DBodyTypeToString(Rigidbody2DComponent::BodyType bodyType)
+	{
+		switch (bodyType)
+		{
+			case Rigidbody2DComponent::BodyType::Static:    return "Static";
+			case Rigidbody2DComponent::BodyType::Dynamic:   return "Dynamic";
+			case Rigidbody2DComponent::BodyType::Kinematic: return "Kinematic";
+		}
+
+		PS_ASSERT(false, "Unknown body type");
+		return {};
+	}
+
+	static Rigidbody2DComponent::BodyType RigidBody2DBodyTypeFromString(const std::string& bodyTypeString)
+	{
+		if (bodyTypeString == "Static")    return Rigidbody2DComponent::BodyType::Static;
+		if (bodyTypeString == "Dynamic")   return Rigidbody2DComponent::BodyType::Dynamic;
+		if (bodyTypeString == "Kinematic") return Rigidbody2DComponent::BodyType::Kinematic;
+
+		PS_ASSERT(false, "Unknown body type");
+		return Rigidbody2DComponent::BodyType::Static;
 	}
 
 	SceneSerializer::SceneSerializer(const std::shared_ptr<Scene>& scene)
@@ -103,6 +156,32 @@ namespace PhySim {
 			out << YAML::Key << "Translation" << YAML::Value << entity->m_Translation;
 			out << YAML::Key << "Rotation" << YAML::Value << entity->m_Rotation;
 			out << YAML::Key << "Scale" << YAML::Value << entity->m_Scale;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity->rb2d) 
+		{
+			out << YAML::Key << "Rigidbody2DComponent";
+			out << YAML::BeginMap; // Rigidbody2DComponent
+
+			out << YAML::Key << "BodyType" << YAML::Value << RigidBody2DBodyTypeToString(entity->rb2d->Type);
+			out << YAML::Key << "FixedRotation" << YAML::Value << entity->rb2d->FixedRotation;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity->bc2d)
+		{
+			out << YAML::Key << "BoxCollider2DComponent";
+			out << YAML::BeginMap; // BoxCollider2DComponent
+
+			out << YAML::Key << "Offset" << YAML::Value << entity->bc2d->Offset;
+			out << YAML::Key << "Size" << YAML::Value << entity->bc2d->Size;
+			out << YAML::Key << "Density" << YAML::Value << entity->bc2d->Density;
+			out << YAML::Key << "Friction" << YAML::Value << entity->bc2d->Friction;
+			out << YAML::Key << "Restitution" << YAML::Value << entity->bc2d->Restitution;
+			out << YAML::Key << "RestitutionThreshold" << YAML::Value << entity->bc2d->RestitutionThreshold;
 
 			out << YAML::EndMap;
 		}
@@ -197,6 +276,47 @@ namespace PhySim {
 						deserializedEntity->m_Rotation = transformComponent["Rotation"].as<glm::vec3>();
 						deserializedEntity->m_Scale = transformComponent["Scale"].as<glm::vec3>();
 					}
+				}
+
+				auto rigidbody2DComponent = entity["Rigidbody2DComponent"];
+				if (rigidbody2DComponent)
+				{
+					if (deserializedQuad)
+					{
+						deserializedQuad->rb2d->Type = RigidBody2DBodyTypeFromString(rigidbody2DComponent["BodyType"].as<std::string>());
+						deserializedQuad->rb2d->FixedRotation = rigidbody2DComponent["FixedRotation"].as<bool>();
+					}
+
+					else
+					{
+						deserializedEntity->rb2d->Type = RigidBody2DBodyTypeFromString(rigidbody2DComponent["BodyType"].as<std::string>());
+						deserializedEntity->rb2d->FixedRotation = rigidbody2DComponent["FixedRotation"].as<bool>();
+					}
+				}
+
+				auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
+				if (boxCollider2DComponent)
+				{
+					if (deserializedQuad)
+					{
+						deserializedQuad->bc2d->Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+						deserializedQuad->bc2d->Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+						deserializedQuad->bc2d->Density = boxCollider2DComponent["Density"].as<float>();
+						deserializedQuad->bc2d->Friction = boxCollider2DComponent["Friction"].as<float>();
+						deserializedQuad->bc2d->Restitution = boxCollider2DComponent["Restitution"].as<float>();
+						deserializedQuad->bc2d->RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
+					}
+
+					else
+					{
+						deserializedEntity->bc2d->Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+						deserializedEntity->bc2d->Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+						deserializedEntity->bc2d->Density = boxCollider2DComponent["Density"].as<float>();
+						deserializedEntity->bc2d->Friction = boxCollider2DComponent["Friction"].as<float>();
+						deserializedEntity->bc2d->Restitution = boxCollider2DComponent["Restitution"].as<float>();
+						deserializedEntity->bc2d->RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
+					}
+
 				}
 
 				if (deserializedQuad)

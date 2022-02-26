@@ -17,6 +17,8 @@ namespace PhySim {
 
 		float TexIndex;
 		float TilingFactor;
+
+		int Index;
 	};
 
 	struct Renderer2DData
@@ -54,7 +56,8 @@ namespace PhySim {
 			{ ShaderDataType::Float4, "a_Color" },
 			{ ShaderDataType::Float2, "a_TexCoord" },
 			{ ShaderDataType::Float, "a_TexIndex" },
-			{ ShaderDataType::Float, "a_TilingFactor" }
+			{ ShaderDataType::Float, "a_TilingFactor" },
+			{ ShaderDataType::Int, "a_Index" }
 		});
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
@@ -112,7 +115,6 @@ namespace PhySim {
 	{
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->UploadUniformMat4("u_ViewProjection", projectionData.GetViewProjectionMatrix());
-		//s_Data.TextureShader->UploadUniformMat4("u_Transform", glm::mat4(2.0f));
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -189,7 +191,7 @@ namespace PhySim {
 		DrawQuad(transform, texture, tilingFactor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int index)
 	{
 		constexpr size_t quadVertexCount = 4;
 		const float textureIndex = 0.0f;
@@ -206,13 +208,14 @@ namespace PhySim {
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->Index = index;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
 		s_Data.QuadIndexCount += 6;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const std::shared_ptr<Texture>& texture, int index, float tilingFactor, const glm::vec4& tintColor)
 	{
 		constexpr size_t quadVertexCount = 4;
 		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -247,6 +250,7 @@ namespace PhySim {
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->Index = index;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -260,29 +264,10 @@ namespace PhySim {
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
 	{
-		/*constexpr size_t quadVertexCount = 4;
-		const float textureIndex = 0.0f; // White Texture
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		const float tilingFactor = 1.0f;
-
-		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
-			FlushAndReset();*/
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
-
-		/*for (size_t i = 0; i < quadVertexCount; i++)
-		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = color;
-			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr++;
-		}
-
-		s_Data.QuadIndexCount += 6;*/
 
 		DrawQuad(transform, color);
 	}
@@ -294,48 +279,11 @@ namespace PhySim {
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
 	{
-		/*constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-
-		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
-			FlushAndReset();
-
-		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
-		{
-			if (*s_Data.TextureSlots[i].get() == *texture.get())
-			{
-				textureIndex = (float)i;
-				break;
-			}
-		}
-
-		if (textureIndex == 0.0f)
-		{
-			if (s_Data.TextureSlotIndex >= Renderer2DData::MaxTextureSlots)
-				FlushAndReset();
-
-			textureIndex = (float)s_Data.TextureSlotIndex;
-			s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
-			s_Data.TextureSlotIndex++;
-		}*/
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		/*for (size_t i = 0; i < quadVertexCount; i++)
-		{
-			s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-			s_Data.QuadVertexBufferPtr->Color = tintColor;
-			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
-			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
-			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
-			s_Data.QuadVertexBufferPtr++;
-		}
-
-		s_Data.QuadIndexCount += 6;*/
-
-		DrawQuad(transform, texture, tilingFactor, tintColor);
+		DrawQuad(transform, texture, -1, tilingFactor, tintColor);
 	}
 }

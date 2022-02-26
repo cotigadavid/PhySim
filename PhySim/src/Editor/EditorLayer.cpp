@@ -4,6 +4,7 @@
 #include "Core.h"
 #include "Core/Input.h"
 #include "Core/KeyCodes.h"
+#include "Core/MouseCodes.h"
 
 #include <TempGui/imgui.h>
 
@@ -33,63 +34,15 @@ namespace PhySim {
 	void EditorLayer::OnAttach()
 	{
 		FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_Framebuffer = std::make_shared<Framebuffer>(fbSpec);
 
+		m_PlayIcon = std::make_shared<Texture>("../assets/Icons/Play.png");
+		m_StopIcon = std::make_shared<Texture>("../assets/Icons/Stop.png");
+
 		m_ActiveScene = Application::Get().m_Scene;
-		//m_ActiveScene = std::make_shared<Scene>();
-
-#if 0
-		// Entity
-		auto square = m_ActiveScene->CreateEntity("Green Square");
-		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
-
-		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
-		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
-
-		m_SquareEntity = square;
-
-		m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
-		m_CameraEntity.AddComponent<CameraComponent>();
-
-		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
-		auto& cc = m_SecondCamera.AddComponent<CameraComponent>();
-		cc.Primary = false;
-
-		class CameraController : public ScriptableEntity
-		{
-		public:
-			virtual void OnCreate() override
-			{
-				auto& translation = GetComponent<TransformComponent>().Translation;
-				translation.x = rand() % 10 - 5.0f;
-			}
-
-			virtual void OnDestroy() override
-			{
-			}
-
-			virtual void OnUpdate(Timestep ts) override
-			{
-				auto& translation = GetComponent<TransformComponent>().Translation;
-
-				float speed = 5.0f;
-
-				if (Input::IsKeyPressed(Key::A))
-					translation.x -= speed * ts;
-				if (Input::IsKeyPressed(Key::D))
-					translation.x += speed * ts;
-				if (Input::IsKeyPressed(Key::W))
-					translation.y += speed * ts;
-				if (Input::IsKeyPressed(Key::S))
-					translation.y -= speed * ts;
-			}
-		};
-
-		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-		m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-#endif
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
@@ -105,28 +58,67 @@ namespace PhySim {
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
-
 			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			//glViewport(0, 0, m_ViewportSize.x, m_ViewportSize.y);
 
 			Application::Get().OnResize(m_ViewportSize.x, m_ViewportSize.y);
 
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			
 		}
-
-		// Update
-		//if (m_ViewportFocused)
-			//m_CameraController.OnUpdate(ts);
 
 		// Render
 		m_Framebuffer->Bind();
 		Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Renderer::Clear();
 
+		m_Framebuffer->ClearAttachment(1, -1);
+
 		// Update scene
 
-		m_ActiveScene->OnUpdate(ts);
+		switch (m_SceneState)
+		{
+			case SceneState::Edit:
+			{
+				m_ActiveScene->OnUpdateEditor(ts);
+				break;
+			}
+			case SceneState::Play:
+			{
+				m_ActiveScene->OnUpdateRuntime(ts);
+				break;
+			}
+		}
+		/*switch (m_SceneState)
+		{
+			case SceneState::Edit:
+			{
+				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+				break;
+			}
+			case SceneState::Play:
+			{
+				m_ActiveScene->OnUpdateRuntime(ts);
+				break;
+			}
+		}*/
+
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= m_ViewportBounds[0].x;
+		my -= m_ViewportBounds[0].y;
+		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+		my = viewportSize.y - my;
+		int mouseX = (int)mx;
+		int mouseY = (int)my;
+
+		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+		{
+			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+			
+			m_HoveredEntityIndex = pixelData;
+		}
+		else 
+		{
+			m_HoveredEntityIndex = -2;
+		}
 
 		m_Framebuffer->UnBind();
 	}
@@ -206,9 +198,12 @@ namespace PhySim {
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
+		m_ModelsPanel.OnImGuiRender();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-		ImGui::Begin("Viewport");
+
+		ImGui::Begin("Viewport", nullptr);
+		auto viewportOffset = ImGui::GetCursorPos();
 
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
@@ -220,6 +215,36 @@ namespace PhySim {
 		uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
+		auto windowSize = ImGui::GetWindowSize();
+		ImVec2 minBound = ImGui::GetWindowPos();
+		
+		//
+		//minBound.y -= 24;
+
+		minBound.x += viewportOffset.x;
+		minBound.y += viewportOffset.y;
+
+		ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
+		m_ViewportBounds[0] = { minBound.x, minBound.y };
+		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
+
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODELS_PANEL"))
+			{
+				Entity* entity = (Entity*)payload->Data;
+
+				Quad* quad = dynamic_cast<Quad*>(entity);
+
+				if (quad)
+				{
+					m_ActiveScene->AddEntity(new Quad(*quad));
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		// Gizmos
 		Entity* selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (selectedEntity && m_GizmoType != -1)
@@ -230,10 +255,6 @@ namespace PhySim {
 			float windowWidth = (float)ImGui::GetWindowWidth();
 			float windowHeight = (float)ImGui::GetWindowHeight();
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-			PS_INFO("{0}, {1}, {2}, {3}", ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-			
-			//ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, 720, 720);
-			//PS_INFO("{0}, {1}, {2}, {3}", ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
 			// Camera
 			//auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
@@ -271,10 +292,11 @@ namespace PhySim {
 				selectedEntity->m_Scale = scale;
 			}
 		}
-
 		
 		ImGui::End();
 		ImGui::PopStyleVar();
+
+		UI_Toolbar();
 
 		ImGui::End();
 	}
@@ -283,6 +305,36 @@ namespace PhySim {
 	{
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(PS_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(PS_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
+
+	}
+
+	void EditorLayer::UI_Toolbar()
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		auto& colors = ImGui::GetStyle().Colors;
+		const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f));
+		const auto& buttonActive = colors[ImGuiCol_ButtonActive];
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
+
+		ImGui::Begin("##toolbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+		float size = ImGui::GetWindowHeight() - 4.0f;
+		std::shared_ptr<Texture> icon = m_SceneState == SceneState::Edit ? m_PlayIcon : m_StopIcon;
+		ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
+		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))
+		{
+			if (m_SceneState == SceneState::Edit)
+				OnScenePlay();
+			else if (m_SceneState == SceneState::Play)
+				OnSceneStop();
+		}
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(3);
+		ImGui::End();
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -332,6 +384,29 @@ namespace PhySim {
 		}
 	}
 
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() == Mouse::ButtonLeft && m_HoveredEntityIndex != -2)
+		{
+			PS_INFO("{0}", m_HoveredEntityIndex);
+			if (m_SceneHierarchyPanel.GetSelectionIndex() == -1 || !ImGuizmo::IsOver())
+				m_SceneHierarchyPanel.SetSelectionIndex(m_HoveredEntityIndex);
+		}
+		return false;
+	}
+
+	void EditorLayer::OnScenePlay()
+	{
+		m_SceneState = SceneState::Play;
+		m_ActiveScene->OnRuntimeStart();
+	}
+
+	void EditorLayer::OnSceneStop()
+	{
+		m_SceneState = SceneState::Edit;
+		m_ActiveScene->OnRuntimeStop();
+	}
+
 	void EditorLayer::NewScene()
 	{
 		m_ActiveScene->m_Entities.clear();
@@ -342,9 +417,6 @@ namespace PhySim {
 		std::string filepath = FileDialogs::OpenFile("PhySim Scene (*.physim)\0*.physim\0");
 		if (!filepath.empty())
 		{
-			//m_Context = std::make_shared<Scene>();
-			//m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			//SetContext(m_Context);
 			m_ActiveScene->m_Entities.clear();
 
 			SceneSerializer serializer(m_ActiveScene);

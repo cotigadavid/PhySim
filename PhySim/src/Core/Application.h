@@ -36,17 +36,12 @@ namespace PhySim {
 		void OnEvent(Event& e);
 		void OnUpdate(Timestep ts);
 
-		Window& GetWindow() { return *m_Window; }
-
 		inline static Application& Get() { return *s_Instance; }
-
-		//ResultData& GetResultData() { return m_ResultData; }
 
 		void Close() { m_Running = false; }
 
-
+		Window& GetWindow() { return *m_Window; }
 		ImGuiLayer* GetImGuiLayer() { return m_ImguiLayer; }
-
 		ProjectionData GetProjectionData() { return m_ProjectionData; }
 
 		void OnResize(float width, float height);
@@ -64,19 +59,11 @@ namespace PhySim {
 		float m_LastFrameTime = 0;
 
 		ProjectionData m_ProjectionData;
-
-		std::shared_ptr<VertexArray> m_VertexArray;
-		std::shared_ptr<Texture> m_CheckerboardTexture, m_LogoTexture;
-		
-
 		ShaderLibrary m_ShaderLibrary;
 
 		static Application* s_Instance;
 
-		//SceneHierarchyPanel m_SceneHierarchyPanel;
-
 	public:
-		glm::vec3 Squarecolor;
 		std::shared_ptr<Scene> m_Scene;
 	};
 }

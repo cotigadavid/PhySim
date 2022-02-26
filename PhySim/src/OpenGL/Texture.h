@@ -15,6 +15,7 @@ namespace PhySim {
 
 		unsigned int GetWidth() const { return m_Width; }
 		unsigned int GetHeight() const { return m_Height; }
+		unsigned int GetRendererID() const { return m_RendererID; }
 
 		virtual void SetData(void* data, uint32_t size);
 

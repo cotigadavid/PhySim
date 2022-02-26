@@ -28,6 +28,10 @@ namespace PhySim {
 
 			return m_Context->m_Entities[m_SelectionIndex]; 
 		}
+
+		int GetSelectionIndex() { return m_SelectionIndex; }
+
+		void SetSelectionIndex(int index) { m_SelectionIndex = index; }
 	
 	private:
 		void DrawEntityNode(int index);

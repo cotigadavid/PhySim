@@ -9,7 +9,7 @@ namespace PhySim {
 	void Log::Init()
 	{
 		spdlog::set_pattern("%^[%T] %n: %v%$");
-		s_Logger = spdlog::stdout_color_mt("CarData");
+		s_Logger = spdlog::stdout_color_mt("PhySim");
 		s_Logger->set_level(spdlog::level::trace);
 
 	}

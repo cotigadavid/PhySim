@@ -33,23 +33,12 @@ namespace PhySim {
 
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
-		/*ImGuiIO& io = ImGui::GetIO();
-		Application& app = Application::Get();
-
-		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui::NewFrame();
-
-		static ImGuiWindowFlags flags = ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_MenuBar;
-		ImGui::SetNextWindowSize(ImVec2(500, 256));*/
 
 		ImGui::Begin("Scene Hierarchy");
 
 		for (uint32_t i = 0; i < m_Context->m_Entities.size(); ++i)
 		{
 			DrawEntityNode(i);
-			//PS_ERROR("{0}", m_Context->m_Entities.size());
 		}
 
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
@@ -74,10 +63,6 @@ namespace PhySim {
 			DrawComponents(m_SelectionIndex);
 
 		ImGui::End();
-
-		//ImGui::Render();
-		//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 	}
 
 	static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f)
@@ -179,10 +164,8 @@ namespace PhySim {
 
 		if (entityDeleted)
 		{
-			//m_Context->m_Entities[index]->m_Rotation.z += 45;
 			delete m_Context->m_Entities[index];
 			m_Context->m_Entities.erase(m_Context->m_Entities.begin() + index);
-			//PS_ERROR("{0}", index);
 			if (m_SelectionIndex == index)
 				m_SelectionIndex = -1;
 		}
@@ -216,7 +199,7 @@ namespace PhySim {
 			glm::vec3 rotation = glm::degrees(entity->m_Rotation);
 			DrawVec3Control("Rotation", rotation);
 			entity->m_Rotation = glm::radians(rotation);
-			DrawVec3Control("Scale", entity->m_Scale, 1.0f);
+			DrawVec3Control("Scale", entity->m_Scale, 30.0f);
 
 			ImGui::TreePop();
 		}
@@ -225,12 +208,14 @@ namespace PhySim {
 		ImGui::Spacing();
 		ImGui::Spacing();
 
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		ImVec2 buttonSize = { lineHeight + 50.0f, lineHeight };
+
 		if (entity->m_HasSpriteRendererComponent)
 		{
-			if (ImGui::TreeNodeEx((void*)(entity + 1), treeNodeFlags, "Color"))
+			Quad* quad = dynamic_cast<Quad*>(entity);
+			if (ImGui::TreeNodeEx((void*)(entity + 1), treeNodeFlags, "Sprite"))
 			{
-				Quad* quad = dynamic_cast<Quad*>(entity);
-				//Quad* quad = (Quad*)entity;
 				if (quad)
 				{
 					auto& color = quad->m_Color;
@@ -239,76 +224,63 @@ namespace PhySim {
 					ImGui::TreePop();
 				}
 			}
+
+			if (ImGui::TreeNodeEx((void*)(entity + 2), treeNodeFlags, "Texture"))
+			{
+				if (quad)
+				{
+					if (ImGui::Button("clear", buttonSize))
+					{
+						quad->m_Texture = nullptr;
+					}
+
+					ImGui::SameLine();
+
+					if (ImGui::Button("...", buttonSize))
+					{
+						std::string filepath = FileDialogs::OpenFile("Texture (*.png)\0*.png\0");
+						if (!filepath.empty())
+							quad->m_Texture = std::make_shared<Texture>(filepath);
+					}
+
+					ImGui::DragFloat("Tiling Factor", &quad->m_TilingFactor, 0.1f, 0.0f, 100.0f);
+				}
+				ImGui::TreePop();
+			}
+		}
+		if (entity->rb2d)
+		{
+			const char* bodyTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
+			const char* currentBodyTypeString = bodyTypeStrings[(int)entity->rb2d->Type];
+			if (ImGui::BeginCombo("Body Type", currentBodyTypeString))
+			{
+				for (int i = 0; i < 2; i++)
+				{
+					bool isSelected = currentBodyTypeString == bodyTypeStrings[i];
+					if (ImGui::Selectable(bodyTypeStrings[i], isSelected))
+					{
+						currentBodyTypeString = bodyTypeStrings[i];
+						entity->rb2d->Type = (Rigidbody2DComponent::BodyType)i;
+					}
+
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+
+				ImGui::EndCombo();
+			}
+
+			ImGui::Checkbox("Fixed Rotation", &entity->rb2d->FixedRotation);
 		}
 
-	}
-
-	/*void SceneHierarchyPanel::NewScene()
-	{
-		m_Context->m_Entities.clear();
-		//m_Context = std::make_shared<Scene>();
-		//m_Context->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-		//SetContext(m_Context);
-		//Application::Get().m_Scene = m_Context;
-		//m_Context->AddEntity(new Quad("fake", m_Context.get()));
-		
-		/*m_Context->AddEntity(new Quad("fake", m_Context.get()));
-		m_Context->AddEntity(new Quad("fake", m_Context.get()));
-		m_Context->m_Entities.pop_back();
-		m_Context->m_Entities.pop_back();*/
-		//Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-		/*for (uint32_t index = 0; index < m_Context->m_Entities.size(); index++)
+		if (entity->bc2d)
 		{
-			m_Context->m_Entities[index]->m_Translation.x = 100;
-
-			PS_INFO("{0}", index);
-		}
-
-		m_Context->m_Entities.clear();*/
-
-		/*m_Context->OnUpdate(101);
-
-		for (uint32_t index = 0; m_Context->m_Entities.size(); )
-		{
-			//m_Context->m_Entities[index]->m_Translation.z = -2;
-			//PS_ERROR("{0}", m_Context->m_Entities[index]->m_Translation.z);
-			//delete m_Context->m_Entities[index];
-			m_Context->m_Entities.erase(m_Context->m_Entities.begin() + index);
-			
-		}*/
-
-		
-
-		/*for (int i = m_Context->m_Entities.size() - 2; i >= 0; --i)
-		{
-			delete m_Context->m_Entities[i];
-			m_Context->m_Entities.pop_back();
-		}
-	}
-
-	void SceneHierarchyPanel::OpenScene()
-	{
-		std::string filepath = FileDialogs::OpenFile("PhySim Scene (*.physim)\0*.physim\0");
-		if (!filepath.empty())
-		{
-			//m_Context = std::make_shared<Scene>();
-			//m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			//SetContext(m_Context);
-			m_Context->m_Entities.clear();
-
-			SceneSerializer serializer(m_Context);
-			serializer.Deserialize(filepath);
+			ImGui::DragFloat2("Offset", glm::value_ptr(entity->bc2d->Offset));
+			ImGui::DragFloat2("Size", glm::value_ptr(entity->bc2d->Offset));
+			ImGui::DragFloat("Density", &entity->bc2d->Density, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Friction", &entity->bc2d->Friction, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Restitution", &entity->bc2d->Restitution, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("Restitution Threshold", &entity->bc2d->RestitutionThreshold, 0.01f, 0.0f);
 		}
 	}
-
-	void SceneHierarchyPanel::SaveSceneAs()
-	{
-		std::string filepath = FileDialogs::SaveFile("PhySim Scene (*.physim)\0*.physim\0");
-		if (!filepath.empty())
-		{
-			SceneSerializer serializer(m_Context);
-			serializer.Serialize(filepath);
-		}
-	}*/
 }

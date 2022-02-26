@@ -10,6 +10,7 @@ namespace PhySim {
 
 		// Color
 		RGBA8,
+		RED_INTEGER,
 
 		// Depth/stencil
 		DEPTH24STENCIL8,
@@ -59,6 +60,10 @@ namespace PhySim {
 		void UnBind();
 
 		void Resize(uint32_t width, uint32_t height);
+
+		int ReadPixel(uint32_t attachmentIndex, int x, int y);
+
+		void ClearAttachment(uint32_t attachmentIndex, int value);
 
 		uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const { PS_ASSERT(index < m_ColorAttachments.size(), "FrameBuffer.h"); return m_ColorAttachments[index]; }
 

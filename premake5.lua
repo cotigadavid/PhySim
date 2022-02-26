@@ -17,11 +17,13 @@ IncludeDir["glm"] = "PhySim/vendor/glm"
 IncludeDir["stb_image"] = "PhySim/vendor/stb_image"
 IncludeDir["yaml_cpp"] = "PhySim/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"] = "PhySim/vendor/ImGuizmo"
+IncludeDir["Box2D"] = "PhySim/vendor/Box2D/include"
 
 include "PhySim/vendor/GLFW"
 include "PhySim/vendor/Glad"
 include "PhySim/vendor/yaml-cpp"
-include "PhySim/vendor/ImGuizmo"
+--include "PhySim/vendor/ImGuizmo"
+include "PhySim/vendor/Box2D"
 
 
 project "PhySim"
@@ -58,12 +60,14 @@ project "PhySim"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.ImGuizmo}"
+		"%{IncludeDir.ImGuizmo}",
+		"%{IncludeDir.Box2D}",
 		
 	}
 
 	links
 	{
+		"Box2D",
 		"GLFW",
 		"opengl32.lib",
 		"Glad",

@@ -2,6 +2,7 @@
 
 #include "Core/Layer.h"
 #include "SceneHierarchyPanel.h"
+#include "ModelsPanel.h"
 
 #include "OpenGL/FrameBuffer.h"
 
@@ -22,8 +23,13 @@ namespace PhySim {
 		std::shared_ptr<Framebuffer> m_Framebuffer;
 
 	private:
+		void UI_Toolbar();
 
 		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+
+		void OnScenePlay();
+		void OnSceneStop();
 
 		void NewScene();
 		void OpenScene();
@@ -31,32 +37,27 @@ namespace PhySim {
 
 	private:
 		std::shared_ptr<Scene> m_ActiveScene;
-		
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		glm::vec2 m_ViewportBounds[2];
 
-		int m_GizmoType = -1;
+		std::shared_ptr<Texture> m_PlayIcon, m_StopIcon;
 
+		int m_GizmoType = 0;
+
+		enum class SceneState
+		{
+			Edit = 0, Play
+		};
+
+		SceneState m_SceneState = SceneState::Edit;
+
+		int m_HoveredEntityIndex;
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		ModelsPanel m_ModelsPanel;
 	};
 
-	/*class Layer
-	{
-	public:
-		Layer(const std::string& name = "Layer");
-		virtual ~Layer();
-
-		virtual void OnAttach() {}
-		virtual void OnDetach() {}
-		virtual void OnUpdate(Timestep ts) {}
-		virtual void OnImGuiRender() {}
-		virtual void OnEvent(Event& event) {}
-
-		inline const std::string& GetName() const { return m_DebugName; }
-	protected:
-		std::string m_DebugName;
-	};*/
 
 }

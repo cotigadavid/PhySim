@@ -10,3 +10,6 @@
 [submodule "imguizmo"]
 	path = imguizmo
 	url = https://github.com/thecherno/imguizmo
+[submodule "box2d"]
+	path = box2d
+	url = https://github.com/TheCherno/box2d.git
