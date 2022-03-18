@@ -186,14 +186,12 @@ namespace PhySim {
 			out << YAML::EndMap;
 		}
 
-		Quad* quad = dynamic_cast<Quad*>(entity);
-
-		if (quad)
+		if (entity->spriteComponent)
 		{
 			out << YAML::Key << "SpriteRendererComponent";
 			out << YAML::BeginMap;
 
-			out << YAML::Key << "Color" << YAML::Value << quad->m_Color;
+			out << YAML::Key << "Color" << YAML::Value << entity->spriteComponent->m_Color;
 
 			out << YAML::EndMap;
 		}
@@ -250,79 +248,43 @@ namespace PhySim {
 					name = tagComponent["Name"].as<std::string>();
 
 				Entity* deserializedEntity = new Entity(name, m_Scene.get());
-				Quad* deserializedQuad = nullptr; 
 
 				auto spriteRendererComponent = entity["SpriteRendererComponent"];
 				if (spriteRendererComponent)
 				{
-					deserializedQuad = new Quad(name, m_Scene.get());
-					deserializedQuad->m_Color = spriteRendererComponent["Color"].as<glm::vec4>();
+					deserializedEntity->spriteComponent = new SpriteComponent();
+					deserializedEntity->spriteComponent->m_Color = spriteRendererComponent["Color"].as<glm::vec4>();
 				}
 
 				auto transformComponent = entity["TransformComponent"];
 				if (transformComponent)
 				{
-
-					if (deserializedQuad)
-					{
-						deserializedQuad->m_Translation = transformComponent["Translation"].as<glm::vec3>();
-						deserializedQuad->m_Rotation = transformComponent["Rotation"].as<glm::vec3>();
-						deserializedQuad->m_Scale = transformComponent["Scale"].as<glm::vec3>();
-					}
-
-					else
-					{
-						deserializedEntity->m_Translation = transformComponent["Translation"].as<glm::vec3>();
-						deserializedEntity->m_Rotation = transformComponent["Rotation"].as<glm::vec3>();
-						deserializedEntity->m_Scale = transformComponent["Scale"].as<glm::vec3>();
-					}
+					deserializedEntity->m_Translation = transformComponent["Translation"].as<glm::vec3>();
+					deserializedEntity->m_Rotation = transformComponent["Rotation"].as<glm::vec3>();
+					deserializedEntity->m_Scale = transformComponent["Scale"].as<glm::vec3>();
 				}
 
 				auto rigidbody2DComponent = entity["Rigidbody2DComponent"];
 				if (rigidbody2DComponent)
 				{
-					if (deserializedQuad)
-					{
-						deserializedQuad->rb2d->Type = RigidBody2DBodyTypeFromString(rigidbody2DComponent["BodyType"].as<std::string>());
-						deserializedQuad->rb2d->FixedRotation = rigidbody2DComponent["FixedRotation"].as<bool>();
-					}
-
-					else
-					{
-						deserializedEntity->rb2d->Type = RigidBody2DBodyTypeFromString(rigidbody2DComponent["BodyType"].as<std::string>());
-						deserializedEntity->rb2d->FixedRotation = rigidbody2DComponent["FixedRotation"].as<bool>();
-					}
+					
+					deserializedEntity->rb2d->Type = RigidBody2DBodyTypeFromString(rigidbody2DComponent["BodyType"].as<std::string>());
+					deserializedEntity->rb2d->FixedRotation = rigidbody2DComponent["FixedRotation"].as<bool>();
+					
 				}
 
 				auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
 				if (boxCollider2DComponent)
 				{
-					if (deserializedQuad)
-					{
-						deserializedQuad->bc2d->Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
-						deserializedQuad->bc2d->Size = boxCollider2DComponent["Size"].as<glm::vec2>();
-						deserializedQuad->bc2d->Density = boxCollider2DComponent["Density"].as<float>();
-						deserializedQuad->bc2d->Friction = boxCollider2DComponent["Friction"].as<float>();
-						deserializedQuad->bc2d->Restitution = boxCollider2DComponent["Restitution"].as<float>();
-						deserializedQuad->bc2d->RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
-					}
-
-					else
-					{
-						deserializedEntity->bc2d->Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
-						deserializedEntity->bc2d->Size = boxCollider2DComponent["Size"].as<glm::vec2>();
-						deserializedEntity->bc2d->Density = boxCollider2DComponent["Density"].as<float>();
-						deserializedEntity->bc2d->Friction = boxCollider2DComponent["Friction"].as<float>();
-						deserializedEntity->bc2d->Restitution = boxCollider2DComponent["Restitution"].as<float>();
-						deserializedEntity->bc2d->RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
-					}
-
+					deserializedEntity->bc2d->Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+					deserializedEntity->bc2d->Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+					deserializedEntity->bc2d->Density = boxCollider2DComponent["Density"].as<float>();
+					deserializedEntity->bc2d->Friction = boxCollider2DComponent["Friction"].as<float>();
+					deserializedEntity->bc2d->Restitution = boxCollider2DComponent["Restitution"].as<float>();
+					deserializedEntity->bc2d->RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
 				}
 
-				if (deserializedQuad)
-					m_Scene->AddEntity(deserializedQuad);
-				else
-					m_Scene->AddEntity(deserializedEntity);
+				m_Scene->AddEntity(deserializedEntity);
 
 				//delete deserializedQuad;
 				//delete deserializedEntity;

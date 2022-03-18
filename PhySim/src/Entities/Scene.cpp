@@ -39,7 +39,7 @@ namespace PhySim {
 
 	void Scene::CreteQuad(const std::string& name)
 	{
-		AddEntity(new Quad(name, this));
+		AddEntity(new Entity(name, this));
 	}
 
 	void Scene::CreteCircle(const std::string& name)
@@ -56,6 +56,31 @@ namespace PhySim {
 	{
 		entity->m_Scene = this;
 		m_Entities.push_back(entity);
+	}
+
+	void Scene::DuplicateEntity(Entity* entity)
+	{
+		Entity* newEntity = new Entity(*entity);
+		AddEntity(newEntity);
+	}
+
+	std::shared_ptr<Scene> Scene::CopyScene(std::shared_ptr<Scene> other)
+	{
+		std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+
+		newScene->m_ViewportHeight = other->m_ViewportHeight;
+		newScene->m_ViewportWidth = other->m_ViewportWidth;
+
+		//newScene->m_PhysicsWorld = other->m_PhysicsWorld;
+
+		//newScene->m_Entities = other->m_Entities;
+
+		for (int i = 0; i < other->m_Entities.size(); ++i)
+		{
+			newScene->m_Entities.push_back(new Entity(*other->m_Entities[i]));
+		}
+
+		return newScene;
 	}
 
 	void Scene::OnRuntimeStart()
@@ -125,7 +150,12 @@ namespace PhySim {
 				entity->m_Translation.y = position.y;
 				entity->m_Rotation.z = body->GetAngle();
 			}
+
+			entity->bc2d->Size = { entity->m_Scale.x / 2, entity->m_Scale.y / 2 };
+
+			PS_INFO("{0}", entity->bc2d->Size.x);
 		}
+
 
 		OnUpdateEditor(ts);
 	}
@@ -137,23 +167,33 @@ namespace PhySim {
 		for (unsigned int index = 0; index < m_Entities.size(); ++index)
 		{
 			Entity* entity = m_Entities[index];
-			Quad* quad = dynamic_cast<Quad*>(entity);
-			if (quad)
+			if (entity->spriteComponent)
 			{
-				if (quad->m_Texture)
-					Renderer2D::DrawQuad(quad->GetTransform(), quad->m_Texture, index, quad->m_TilingFactor);
+				if (entity->spriteComponent->m_Texture)
+					Renderer2D::DrawQuad(entity->GetTransform(), entity->spriteComponent->m_Texture, index, entity->spriteComponent->m_TilingFactor);
 				else
-					Renderer2D::DrawQuad(quad->GetTransform(), quad->m_Color, index);
+					Renderer2D::DrawQuad(entity->GetTransform(), entity->spriteComponent->m_Color, index);
+
+				entity->bc2d->Size = { entity->m_Scale.x / 2, entity->m_Scale.y / 2 };
+				
+			}
+			if (entity->circleComponent)
+			{
+				Renderer2D::DrawCircle(entity->GetTransform(), entity->circleComponent->m_Color, entity->circleComponent->m_Thickness, entity->circleComponent->m_Fade, index);
 			}
 		}
 
 		//flush
-		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Renderer2D::DrawQuad(glm::vec2(-20.0f), glm::vec2(1.0f), glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		
 
 		Renderer2D::EndScene();
 	}

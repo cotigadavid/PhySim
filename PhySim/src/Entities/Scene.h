@@ -23,6 +23,9 @@ namespace PhySim
 		void DestroyEntity(Entity entity);
 
 		void AddEntity(Entity* entity);
+		void DuplicateEntity(Entity* entity);
+
+		static std::shared_ptr<Scene> CopyScene(std::shared_ptr<Scene> other);
 
 		void OnRuntimeStart();
 		void OnRuntimeStop();

@@ -199,7 +199,7 @@ namespace PhySim {
 			glm::vec3 rotation = glm::degrees(entity->m_Rotation);
 			DrawVec3Control("Rotation", rotation);
 			entity->m_Rotation = glm::radians(rotation);
-			DrawVec3Control("Scale", entity->m_Scale, 30.0f);
+			DrawVec3Control("Scale", entity->m_Scale, 1.0f);
 
 			ImGui::TreePop();
 		}
@@ -211,40 +211,35 @@ namespace PhySim {
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		ImVec2 buttonSize = { lineHeight + 50.0f, lineHeight };
 
-		if (entity->m_HasSpriteRendererComponent)
+		if (entity->spriteComponent)
 		{
-			Quad* quad = dynamic_cast<Quad*>(entity);
 			if (ImGui::TreeNodeEx((void*)(entity + 1), treeNodeFlags, "Sprite"))
 			{
-				if (quad)
-				{
-					auto& color = quad->m_Color;
-					ImGui::ColorEdit4("Color", glm::value_ptr(color));
+				auto& color = entity->spriteComponent->m_Color;
+				ImGui::ColorEdit4("Color", glm::value_ptr(color));
 
-					ImGui::TreePop();
-				}
+				ImGui::TreePop();
 			}
 
 			if (ImGui::TreeNodeEx((void*)(entity + 2), treeNodeFlags, "Texture"))
 			{
-				if (quad)
+				
+				if (ImGui::Button("clear", buttonSize))
 				{
-					if (ImGui::Button("clear", buttonSize))
-					{
-						quad->m_Texture = nullptr;
-					}
-
-					ImGui::SameLine();
-
-					if (ImGui::Button("...", buttonSize))
-					{
-						std::string filepath = FileDialogs::OpenFile("Texture (*.png)\0*.png\0");
-						if (!filepath.empty())
-							quad->m_Texture = std::make_shared<Texture>(filepath);
-					}
-
-					ImGui::DragFloat("Tiling Factor", &quad->m_TilingFactor, 0.1f, 0.0f, 100.0f);
+					entity->spriteComponent->m_Texture = nullptr;
 				}
+
+				ImGui::SameLine();
+
+				if (ImGui::Button("...", buttonSize))
+				{
+					std::string filepath = FileDialogs::OpenFile("Texture (*.png)\0*.png\0");
+					if (!filepath.empty())
+						entity->spriteComponent->m_Texture = std::make_shared<Texture>(filepath);
+				}
+
+				ImGui::DragFloat("Tiling Factor", &entity->spriteComponent->m_TilingFactor, 0.1f, 0.0f, 100.0f);
+				
 				ImGui::TreePop();
 			}
 		}
@@ -276,7 +271,7 @@ namespace PhySim {
 		if (entity->bc2d)
 		{
 			ImGui::DragFloat2("Offset", glm::value_ptr(entity->bc2d->Offset));
-			ImGui::DragFloat2("Size", glm::value_ptr(entity->bc2d->Offset));
+			ImGui::DragFloat2("Size", glm::value_ptr(entity->bc2d->Size));
 			ImGui::DragFloat("Density", &entity->bc2d->Density, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Friction", &entity->bc2d->Friction, 0.01f, 0.0f, 1.0f);
 			ImGui::DragFloat("Restitution", &entity->bc2d->Restitution, 0.01f, 0.0f, 1.0f);

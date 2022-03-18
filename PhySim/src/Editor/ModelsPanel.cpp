@@ -39,7 +39,7 @@ namespace PhySim {
 		
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload("MODELS_PANEL", new Quad("newQuad"), sizeof(Quad));
+			ImGui::SetDragDropPayload("MODELS_PANEL", new Entity("newQuad"), sizeof(Entity));
 			ImGui::EndDragDropSource();
 		}
 		ImGui::NextColumn();

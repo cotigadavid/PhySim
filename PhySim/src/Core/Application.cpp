@@ -17,7 +17,7 @@ namespace PhySim {
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application()
-		: m_ProjectionData(0.0f, 1280.0f, 0.0f, 720.0f)
+		: m_ProjectionData(-10.0f, 10, -10.0f, 10.0f)
 	{
 		s_Instance = this;
 
@@ -29,6 +29,8 @@ namespace PhySim {
 		m_ImguiLayer = new ImGuiLayer();
 		m_ImguiLayer->OnAttach();
 
+
+		Rigidbody2DComponent();
 		m_Scene = std::make_shared<Scene>();
 
 		EditorLayer* editorLayer = new EditorLayer();
@@ -36,20 +38,23 @@ namespace PhySim {
 		m_LayerStack.PushLayer(editorLayer);
 		editorLayer->OnAttach();
 
-		Quad* quad2 = new Quad("quad2");
-		quad2->m_Translation = { 200.0f, 200.0f, 1.0f };
-		quad2->m_Color = { 0.5f, 1.0f, 0.5f, 1.0f };
-		quad2->rb2d = new Rigidbody2DComponent();
-		quad2->bc2d = new BoxCollider2DComponent();
+		Entity* quad2 = new Entity("quad2");
+		quad2->spriteComponent = new SpriteComponent();
+		quad2->m_Translation = { 3.5f, 3.5f, 1.0f };
+		quad2->spriteComponent->m_Color = { 0.5f, 1.0f, 0.5f, 1.0f };
 		m_Scene->AddEntity(quad2);
 
-		Quad* quad3 = new Quad("quad3");
-		quad3->m_Translation = { 500.0f, 500.0f, 1.0f };
-		quad3->m_Color = { 1.0f, 0.5f, 0.5f, 1.0f };
-		quad3->rb2d = new Rigidbody2DComponent();
-		quad3->bc2d = new BoxCollider2DComponent();
+		Entity* quad3 = new Entity("quad3");
+		quad3->spriteComponent = new SpriteComponent();
+		quad3->m_Translation = { 5.3f, 5.3f, 1.0f };
+		quad3->spriteComponent->m_Color = { 1.0f, 0.5f, 0.5f, 1.0f };
 		m_Scene->AddEntity(quad3);
 
+		Entity* circle1 = new Entity("circle1");
+		circle1->circleComponent = new CircleComponent();
+		circle1->m_Translation = { 5.3f, 5.3f, 1.0f };
+		circle1->circleComponent->m_Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		m_Scene->AddEntity(circle1);
 	}
 
 	Application::~Application()
@@ -105,7 +110,7 @@ namespace PhySim {
 		glViewport(0, 0, width, height);
 
 		float aspectRatio = width / height;
-		m_ProjectionData.SetProjection(0, aspectRatio * 720, 0, 720);
+		m_ProjectionData.SetProjection(-10.0f * aspectRatio, 10.0f * aspectRatio, -10.0f , 10.0f );
 	}
 
 	bool Application::OnWindowClosed(WindowCloseEvent& e)

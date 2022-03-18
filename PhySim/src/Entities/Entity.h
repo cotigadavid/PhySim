@@ -18,13 +18,18 @@ namespace PhySim {
 		void* RuntimeBody = nullptr;
 
 		Rigidbody2DComponent() = default;
-		Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
+		Rigidbody2DComponent(const Rigidbody2DComponent& other)
+		{
+			RuntimeBody = other.RuntimeBody;
+			Type = other.Type;
+			FixedRotation = other.FixedRotation;
+		}
 	};
 
 	struct BoxCollider2DComponent
 	{
 		glm::vec2 Offset = { 0.0f, 0.0f };
-		glm::vec2 Size = { 10.0f, 10.0f };
+		glm::vec2 Size = { 0.1f, 0.1f };
 
 		float Density = 1.0f;
 		float Friction = 0.5f;
@@ -34,15 +39,60 @@ namespace PhySim {
 		void* RuntimeFixture = nullptr;
 
 		BoxCollider2DComponent() = default;
-		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+		BoxCollider2DComponent(const BoxCollider2DComponent& other)
+		{
+			Offset = other.Offset;
+			Size = other.Size;
+
+			Density = other.Density;
+			Friction = other.Friction;
+			Restitution = other.Restitution;
+			RestitutionThreshold = other.RestitutionThreshold;
+			RuntimeFixture = other.RuntimeFixture;
+		}
+	};
+
+	class SpriteComponent
+	{
+	public:
+
+		glm::vec4 m_Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		std::shared_ptr<Texture> m_Texture = nullptr;
+		float m_TilingFactor = 1;
+
+		SpriteComponent() = default;
+		SpriteComponent(const SpriteComponent& other)
+		{
+			m_Color = other.m_Color;
+			m_Texture = other.m_Texture;
+			m_TilingFactor = other.m_TilingFactor;
+		}
+	};
+
+	struct CircleComponent
+	{
+		glm::vec4 m_Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float m_Thickness = 1.0f;
+		float m_Fade = 0.005f;
+
+		CircleComponent() = default;
+		CircleComponent(const CircleComponent& other)
+		{
+			m_Color = other.m_Color;
+			m_Thickness = other.m_Thickness;
+			m_Fade = other.m_Fade;
+		}
 	};
 
 	class Entity
 	{
 	public:
-		Entity() {}
-		Entity(const std::string& name, Scene* scene);
+		Entity() = default;
+		Entity(const Entity& entity);
+		Entity(const std::string& name, Scene* scene = nullptr);
 		Entity(const std::string& name, const glm::vec3& translation, Scene* scene);
+		Entity(const std::string& name, const glm::vec3& translation, const glm::vec4& color, Scene* scene);
+		Entity(const std::string& name, const glm::vec4& color, Scene* scene);
 		virtual ~Entity() {}
 
 		bool operator==(const Entity& other) const
@@ -67,20 +117,22 @@ namespace PhySim {
 				* glm::scale(glm::mat4(1.0f), m_Scale);
 		}
 		
-		glm::vec3 m_Translation = { 100.0f, 50.0f, 0.0f };
+		void InitializePhysiscs();
+
+		glm::vec3 m_Translation = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 m_Rotation = { 0.0f, 0.0f, 0.0f };
-		glm::vec3 m_Scale = { 30.0f, 30.0f, 30.0f };
+		glm::vec3 m_Scale = { 1.0f, 1.0f, 1.0f };
 		std::string m_Name;
 
 		Rigidbody2DComponent* rb2d = nullptr;
 		BoxCollider2DComponent* bc2d = nullptr;
+		SpriteComponent* spriteComponent = nullptr;
+		CircleComponent* circleComponent = nullptr;
 
 		Scene* m_Scene = nullptr;
-
-		bool m_HasSpriteRendererComponent = false;
 	};
 
-	class Quad : public Entity
+	/*class Quad : public Entity
 	{
 	public:
 		Quad(const Quad& quad);
@@ -95,11 +147,11 @@ namespace PhySim {
 
 		std::shared_ptr<Texture> m_Texture = nullptr;
 		float m_TilingFactor = 1;
-	};
+	};*/
 
-	class Circle : public Entity
+	/*class Circle : public Entity
 	{
 
-	};
+	};*/
 
 }

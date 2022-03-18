@@ -235,12 +235,8 @@ namespace PhySim {
 			{
 				Entity* entity = (Entity*)payload->Data;
 
-				Quad* quad = dynamic_cast<Quad*>(entity);
-
-				if (quad)
-				{
-					m_ActiveScene->AddEntity(new Quad(*quad));
-				}
+				m_ActiveScene->AddEntity(new Entity(*entity));
+				
 			}
 			ImGui::EndDragDropTarget();
 		}
@@ -362,8 +358,19 @@ namespace PhySim {
 		}
 		case Key::S:
 		{
-			if (control && shift)
-				SaveSceneAs();
+			if (control)
+			{
+				if (control)
+					SaveSceneAs();
+				else
+					SaveScene();
+			}
+			break;
+		}
+		case Key::D:
+		{
+			if (control)
+				OnDuplicateEntity();
 
 			break;
 		}
@@ -398,18 +405,28 @@ namespace PhySim {
 	void EditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+
+		m_SavedScene = Scene::CopyScene(m_ActiveScene);
 		m_ActiveScene->OnRuntimeStart();
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnSceneStop()
 	{
 		m_SceneState = SceneState::Edit;
+
 		m_ActiveScene->OnRuntimeStop();
+		m_ActiveScene = Scene::CopyScene(m_SavedScene);
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::NewScene()
 	{
 		m_ActiveScene->m_Entities.clear();
+
+		m_EditorScenePath = std::filesystem::path();
 	}
 
 	void EditorLayer::OpenScene()
@@ -424,6 +441,30 @@ namespace PhySim {
 		}
 	}
 
+	void EditorLayer::OpenScene(const std::filesystem::path& path)
+	{
+		if (m_SceneState != SceneState::Edit)
+			OnSceneStop();
+
+		if (path.extension().string() != ".hazel")
+		{
+			PS_WARN("Could not load {0} - not a scene file", path.filename().string());
+			return;
+		}
+
+		std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
+		SceneSerializer serializer(newScene);
+		if (serializer.Deserialize(path.string()))
+		{
+			/*m_EditorScene = newScene;
+			m_EditorScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel.SetContext(m_EditorScene);
+
+			m_ActiveScene = m_EditorScene;
+			m_EditorScenePath = path;*/
+		}
+	}
+
 	void EditorLayer::SaveSceneAs()
 	{
 		std::string filepath = FileDialogs::SaveFile("PhySim Scene (*.physim)\0*.physim\0");
@@ -431,6 +472,28 @@ namespace PhySim {
 		{
 			SceneSerializer serializer(m_ActiveScene);
 			serializer.Serialize(filepath);
+			m_EditorScenePath = filepath;
 		}
+	}
+
+	void EditorLayer::SaveScene()
+	{
+		if (!m_EditorScenePath.empty())
+		{
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(m_EditorScenePath.string());
+		}
+		else
+			SaveSceneAs();
+	}
+
+	void EditorLayer::OnDuplicateEntity()
+	{
+		if (m_SceneState != SceneState::Edit)
+			return;
+
+		Entity* selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity)
+			m_ActiveScene->DuplicateEntity(selectedEntity);
 	}
 }

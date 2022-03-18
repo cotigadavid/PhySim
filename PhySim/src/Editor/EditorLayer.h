@@ -6,6 +6,8 @@
 
 #include "OpenGL/FrameBuffer.h"
 
+#include <filesystem>
+
 namespace PhySim {
 
 	class EditorLayer : public Layer
@@ -33,10 +35,16 @@ namespace PhySim {
 
 		void NewScene();
 		void OpenScene();
+		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
+		void SaveScene();
+
+		void OnDuplicateEntity();
 
 	private:
-		std::shared_ptr<Scene> m_ActiveScene;
+		std::shared_ptr<Scene> m_ActiveScene; 
+		std::shared_ptr<Scene> m_SavedScene;
+		std::filesystem::path m_EditorScenePath;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };

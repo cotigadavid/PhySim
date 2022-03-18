@@ -53,12 +53,10 @@ namespace PhySim {
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
 
-		unsigned int index = 0;
 		const auto& layout = vertexBuffer->GetLayout();
 
 		for (const auto& element : layout)
 		{
-
 			switch (element.Type)
 			{
 				case ShaderDataType::Float:
@@ -66,14 +64,14 @@ namespace PhySim {
 				case ShaderDataType::Float3:
 				case ShaderDataType::Float4:
 				{
-					glEnableVertexAttribArray(index);
-					glVertexAttribPointer(index,
+					glEnableVertexAttribArray(m_VertexBufferIndex);
+					glVertexAttribPointer(m_VertexBufferIndex,
 						element.GetComponentCount(),
 						ShaderDataTypeToOpenGLBaseType(element.Type),
 						element.Normalized ? GL_TRUE : GL_FALSE,
 						layout.GetStride(),
 						(const void*)element.Offset);
-					index++;
+					m_VertexBufferIndex++;
 					break;
 				}
 				case ShaderDataType::Int:
@@ -82,13 +80,13 @@ namespace PhySim {
 				case ShaderDataType::Int4:
 				case ShaderDataType::Bool:
 				{
-					glEnableVertexAttribArray(index);
-					glVertexAttribIPointer(index,
+					glEnableVertexAttribArray(m_VertexBufferIndex);
+					glVertexAttribIPointer(m_VertexBufferIndex,
 						element.GetComponentCount(),
 						ShaderDataTypeToOpenGLBaseType(element.Type),
 						layout.GetStride(),
 						(const void*)element.Offset);
-					index++;
+					m_VertexBufferIndex++;
 					break;
 				}
 				case ShaderDataType::Mat3:
@@ -97,15 +95,15 @@ namespace PhySim {
 					uint8_t count = element.GetComponentCount();
 					for (uint8_t i = 0; i < count; i++)
 					{
-						glEnableVertexAttribArray(index);
-						glVertexAttribPointer(index,
+						glEnableVertexAttribArray(m_VertexBufferIndex);
+						glVertexAttribPointer(m_VertexBufferIndex,
 							count,
 							ShaderDataTypeToOpenGLBaseType(element.Type),
 							element.Normalized ? GL_TRUE : GL_FALSE,
 							layout.GetStride(),
 							(const void*)(element.Offset + sizeof(float) * count * i));
-						glVertexAttribDivisor(index, 1);
-						index++;
+						glVertexAttribDivisor(m_VertexBufferIndex, 1);
+						m_VertexBufferIndex++;
 					}
 					break;
 				}
