@@ -46,11 +46,12 @@ namespace PhySim {
 		glBindVertexArray(0);
 	}
 
-	void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)
+	void VertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, int a)
 	{
 		PS_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex Buffer has no layout!");
 	
 		glBindVertexArray(m_RendererID);
+		PS_ERROR("{0}", m_RendererID);
 		vertexBuffer->Bind();
 
 		const auto& layout = vertexBuffer->GetLayout();
@@ -118,6 +119,7 @@ namespace PhySim {
 	void VertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)
 	{
 		glBindVertexArray(m_RendererID);
+		PS_ERROR("{0}", m_RendererID);
 		indexBuffer->Bind();
 
 		m_IndexBuffer = indexBuffer;

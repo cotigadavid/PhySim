@@ -59,8 +59,7 @@
       <PreprocessorDefinitions>_GLFW_WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>-std=c11 -lgdi32 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -80,8 +79,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalOptions>-std=c11 -lgdi32 %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -103,11 +101,17 @@
     <ClCompile Include="src\init.c" />
     <ClCompile Include="src\input.c" />
     <ClCompile Include="src\monitor.c" />
+    <ClCompile Include="src\null_init.c" />
+    <ClCompile Include="src\null_joystick.c" />
+    <ClCompile Include="src\null_monitor.c" />
+    <ClCompile Include="src\null_window.c" />
     <ClCompile Include="src\osmesa_context.c" />
+    <ClCompile Include="src\platform.c" />
     <ClCompile Include="src\vulkan.c" />
     <ClCompile Include="src\wgl_context.c" />
     <ClCompile Include="src\win32_init.c" />
     <ClCompile Include="src\win32_joystick.c" />
+    <ClCompile Include="src\win32_module.c" />
     <ClCompile Include="src\win32_monitor.c" />
     <ClCompile Include="src\win32_thread.c" />
     <ClCompile Include="src\win32_time.c" />

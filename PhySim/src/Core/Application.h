@@ -65,5 +65,7 @@ namespace PhySim {
 
 	public:
 		std::shared_ptr<Scene> m_Scene;
+
+		std::shared_ptr<Texture> TriangleTexture;
 	};
 }

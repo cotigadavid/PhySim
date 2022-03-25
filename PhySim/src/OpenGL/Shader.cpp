@@ -162,6 +162,7 @@ namespace PhySim {
 	void Shader::Bind() const
 	{
 		glUseProgram(m_RendererID);
+		PS_ERROR("{0}", m_RendererID);
 	}
 
 	void Shader::UnBind() const

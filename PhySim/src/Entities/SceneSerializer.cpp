@@ -186,12 +186,64 @@ namespace PhySim {
 			out << YAML::EndMap;
 		}
 
+		if (entity->cc2d)
+		{
+			out << YAML::Key << "CircleCollider2DComponent";
+			out << YAML::BeginMap; // CircleCollider2DComponent
+
+			out << YAML::Key << "Offset" << YAML::Value << entity->cc2d->Offset;
+			out << YAML::Key << "Radius" << YAML::Value << entity->cc2d->Radius;
+			out << YAML::Key << "Density" << YAML::Value << entity->cc2d->Density;
+			out << YAML::Key << "Friction" << YAML::Value << entity->cc2d->Friction;
+			out << YAML::Key << "Restitution" << YAML::Value << entity->cc2d->Restitution;
+			out << YAML::Key << "RestitutionThreshold" << YAML::Value << entity->cc2d->RestitutionThreshold;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity->tc2d)
+		{
+			out << YAML::Key << "TriangleCollider2DComponent";
+			out << YAML::BeginMap; // TriangleCollider2DComponent
+
+			out << YAML::Key << "Offset" << YAML::Value << entity->tc2d->Offset;
+			out << YAML::Key << "Size" << YAML::Value << entity->tc2d->Size;
+			out << YAML::Key << "Density" << YAML::Value << entity->tc2d->Density;
+			out << YAML::Key << "Friction" << YAML::Value << entity->tc2d->Friction;
+			out << YAML::Key << "Restitution" << YAML::Value << entity->tc2d->Restitution;
+			out << YAML::Key << "RestitutionThreshold" << YAML::Value << entity->tc2d->RestitutionThreshold;
+
+			out << YAML::EndMap;
+		}
+
 		if (entity->spriteComponent)
 		{
-			out << YAML::Key << "SpriteRendererComponent";
+			out << YAML::Key << "SpriteComponent";
 			out << YAML::BeginMap;
 
 			out << YAML::Key << "Color" << YAML::Value << entity->spriteComponent->m_Color;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity->circleComponent)
+		{
+			out << YAML::Key << "CircleComponent";
+			out << YAML::BeginMap;
+
+			out << YAML::Key << "Color" << YAML::Value << entity->circleComponent->m_Color;
+			out << YAML::Key << "Thickness" << YAML::Value << entity->circleComponent->m_Thickness;
+			out << YAML::Key << "Fade" << YAML::Value << entity->circleComponent->m_Fade;
+
+			out << YAML::EndMap;
+		}
+
+		if (entity->triangleComponent)
+		{
+			out << YAML::Key << "TriangleComponent";
+			out << YAML::BeginMap;
+
+			out << YAML::Key << "Color" << YAML::Value << entity->triangleComponent->m_Color;
 
 			out << YAML::EndMap;
 		}
@@ -249,11 +301,27 @@ namespace PhySim {
 
 				Entity* deserializedEntity = new Entity(name, m_Scene.get());
 
-				auto spriteRendererComponent = entity["SpriteRendererComponent"];
-				if (spriteRendererComponent)
+				auto spriteComponent = entity["SpriteComponent"];
+				if (spriteComponent)
 				{
 					deserializedEntity->spriteComponent = new SpriteComponent();
-					deserializedEntity->spriteComponent->m_Color = spriteRendererComponent["Color"].as<glm::vec4>();
+					deserializedEntity->spriteComponent->m_Color = spriteComponent["Color"].as<glm::vec4>();
+				}
+
+				auto circleComponent = entity["CircleComponent"];
+				if (circleComponent)
+				{
+					deserializedEntity->circleComponent = new CircleComponent();
+					deserializedEntity->circleComponent->m_Color = circleComponent["Color"].as<glm::vec4>();
+					deserializedEntity->circleComponent->m_Thickness = circleComponent["Thickness"].as<float>();
+					deserializedEntity->circleComponent->m_Fade = circleComponent["Fade"].as<float>();
+				}
+
+				auto triangleComponent = entity["TriangleComponent"];
+				if (triangleComponent)
+				{
+					deserializedEntity->triangleComponent = new TriangleComponent();
+					deserializedEntity->triangleComponent->m_Color = triangleComponent["Color"].as<glm::vec4>();
 				}
 
 				auto transformComponent = entity["TransformComponent"];
@@ -276,6 +344,8 @@ namespace PhySim {
 				auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
 				if (boxCollider2DComponent)
 				{
+					deserializedEntity->bc2d = new BoxCollider2DComponent();
+
 					deserializedEntity->bc2d->Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
 					deserializedEntity->bc2d->Size = boxCollider2DComponent["Size"].as<glm::vec2>();
 					deserializedEntity->bc2d->Density = boxCollider2DComponent["Density"].as<float>();
@@ -284,10 +354,33 @@ namespace PhySim {
 					deserializedEntity->bc2d->RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
 				}
 
-				m_Scene->AddEntity(deserializedEntity);
+				auto circleCollider2DComponent = entity["CircleCollider2DComponent"];
+				if (circleCollider2DComponent)
+				{
+					deserializedEntity->cc2d = new CircleCollider2DComponent();
 
-				//delete deserializedQuad;
-				//delete deserializedEntity;
+					deserializedEntity->cc2d->Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+					deserializedEntity->cc2d->Radius = boxCollider2DComponent["Radius"].as<float>();
+					deserializedEntity->cc2d->Density = boxCollider2DComponent["Density"].as<float>();
+					deserializedEntity->cc2d->Friction = boxCollider2DComponent["Friction"].as<float>();
+					deserializedEntity->cc2d->Restitution = boxCollider2DComponent["Restitution"].as<float>();
+					deserializedEntity->cc2d->RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
+				}
+
+				auto triangleCollider2DComponent = entity["TriangleCollider2DComponent"];
+				if (triangleCollider2DComponent)
+				{
+					deserializedEntity->tc2d = new TriangleCollider2DComponent();
+
+					deserializedEntity->tc2d->Offset = triangleCollider2DComponent["Offset"].as<glm::vec2>();
+					deserializedEntity->tc2d->Size = triangleCollider2DComponent["Size"].as<glm::vec2>();
+					deserializedEntity->tc2d->Density = triangleCollider2DComponent["Density"].as<float>();
+					deserializedEntity->tc2d->Friction = triangleCollider2DComponent["Friction"].as<float>();
+					deserializedEntity->tc2d->Restitution = triangleCollider2DComponent["Restitution"].as<float>();
+					deserializedEntity->tc2d->RestitutionThreshold = triangleCollider2DComponent["RestitutionThreshold"].as<float>();
+				}
+
+				m_Scene->AddEntity(deserializedEntity);
 			}
 		}
 

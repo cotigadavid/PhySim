@@ -16,7 +16,6 @@ namespace PhySim {
 		m_SquareTexture = std::make_shared<Texture>("../assets/Textures/1x/Square.png");
 		m_CircleTexture = std::make_shared<Texture>("../assets/Textures/1x/Circle.png");
 		m_TriangleTexture = std::make_shared<Texture>("../assets/Textures/1x/Triangle.png");
-
 	}
 
 	void ModelsPanel::OnImGuiRender()
@@ -39,24 +38,36 @@ namespace PhySim {
 		
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload("MODELS_PANEL", new Entity("newQuad"), sizeof(Entity));
+			Entity* newQuad = new Entity("newQuad");
+			newQuad->spriteComponent = new SpriteComponent();
+			newQuad->m_Translation = { 0.0f, 0.0f, 0.0f };
+			ImGui::SetDragDropPayload("MODELS_PANEL", newQuad, sizeof(Entity));
 			ImGui::EndDragDropSource();
+			delete newQuad;
 		}
 		ImGui::NextColumn();
 
 		ImGui::ImageButton((ImTextureID)m_CircleTexture->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload("MODELS_PANEL", nullptr, 0);
+			Entity* newCircle = new Entity("newCircle");
+			newCircle->circleComponent = new CircleComponent();
+			newCircle->m_Translation = { 0.0f, 0.0f, 0.0f };
+			ImGui::SetDragDropPayload("MODELS_PANEL", newCircle, sizeof(Entity));
 			ImGui::EndDragDropSource();
+			delete newCircle;
 		}
 		ImGui::NextColumn();
 
 		ImGui::ImageButton((ImTextureID)m_TriangleTexture->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 		if (ImGui::BeginDragDropSource())
 		{
-			ImGui::SetDragDropPayload("MODELS_PANEL", nullptr, 0);
+			Entity* newTriangle = new Entity("newTriangle");
+			newTriangle->triangleComponent = new TriangleComponent();
+			newTriangle->m_Translation = { 0.0f, 0.0f, 0.0f };
+			ImGui::SetDragDropPayload("MODELS_PANEL", newTriangle, sizeof(Entity));
 			ImGui::EndDragDropSource();
+			delete newTriangle;
 		}
 		ImGui::PopStyleColor();
 

@@ -41,6 +41,8 @@ namespace PhySim {
 
 		void OnDuplicateEntity();
 
+		void OnOverlayRender();
+
 	private:
 		std::shared_ptr<Scene> m_ActiveScene; 
 		std::shared_ptr<Scene> m_SavedScene;
@@ -53,6 +55,8 @@ namespace PhySim {
 		std::shared_ptr<Texture> m_PlayIcon, m_StopIcon;
 
 		int m_GizmoType = 0;
+		
+		bool m_ShowPhyCol = false;
 
 		enum class SceneState
 		{

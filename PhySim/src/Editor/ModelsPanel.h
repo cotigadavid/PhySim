@@ -16,5 +16,4 @@ namespace PhySim {
 		std::shared_ptr<Texture> m_CircleTexture;
 		std::shared_ptr<Texture> m_TriangleTexture;
 	};
-
 }

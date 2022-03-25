@@ -7,6 +7,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Core/Application.h"
+
 namespace PhySim {
 
 	struct QuadVertex
@@ -32,6 +34,22 @@ namespace PhySim {
 		int Index;
 	};
 
+	struct LineVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+
+		int Index;
+	};
+
+	struct TriangleVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+
+		int Index;
+	};
+
 	struct Renderer2DData
 	{
 		static const uint32_t MaxQuads = 10000;
@@ -48,6 +66,14 @@ namespace PhySim {
 		std::shared_ptr<VertexBuffer> CircleVertexBuffer;
 		std::shared_ptr<Shader> CircleShader;
 
+		std::shared_ptr<VertexArray> LineVertexArray;
+		std::shared_ptr<VertexBuffer> LineVertexBuffer;
+		std::shared_ptr<Shader> LineShader;
+
+		std::shared_ptr<VertexArray> TriangleVertexArray;
+		std::shared_ptr<VertexBuffer> TriangleVertexBuffer;
+		std::shared_ptr<Shader> TriangleShader;
+
 		uint32_t QuadIndexCount = 0;
 		QuadVertex* QuadVertexBufferBase = nullptr;
 		QuadVertex* QuadVertexBufferPtr = nullptr;
@@ -56,9 +82,18 @@ namespace PhySim {
 		CircleVertex* CircleVertexBufferBase = nullptr;
 		CircleVertex* CircleVertexBufferPtr = nullptr;
 
+		uint32_t LineVertexCount = 0;
+		LineVertex* LineVertexBufferBase = nullptr;
+		LineVertex* LineVertexBufferPtr = nullptr;
+
+		uint32_t TriangleVertexCount = 0;
+		TriangleVertex* TriangleVertexBufferBase = nullptr;
+		TriangleVertex* TriangleVertexBufferPtr = nullptr;
 
 		std::array<std::shared_ptr<Texture>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1;
+
+		float LineWidth = 2.0f;
 
 		glm::vec4 QuadVertexPositions[4];
 	};
@@ -121,6 +156,52 @@ namespace PhySim {
 		s_Data.CircleVertexArray->SetIndexBuffer(quadIB); // Use quad IB
 		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
+		//Lines
+		s_Data.LineVertexArray = std::make_shared<VertexArray>();
+		s_Data.LineVertexBuffer = std::make_shared<VertexBuffer>(s_Data.MaxVertices * sizeof(LineVertex));
+		s_Data.LineVertexBuffer->SetLayout({
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float4, "a_Color"    },
+			{ ShaderDataType::Int,    "a_EntityID" }
+		});
+		s_Data.LineVertexArray->AddVertexBuffer(s_Data.LineVertexBuffer);
+		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
+			
+		//Triangles 
+
+		uint32_t* quadIndicesT = new uint32_t[s_Data.MaxIndices];
+
+		offset = 1;
+		for (uint32_t i = 0; i < s_Data.MaxIndices; i += 3)
+		{
+			quadIndicesT[i] = offset + 0;
+			quadIndicesT[i] = offset + 1;
+			quadIndicesT[i] = offset + 2;
+
+			offset += 3;
+		}
+
+		for (uint32_t i = 0; i < s_Data.MaxIndices; i++)
+		{
+			quadIndicesT[i] = i;
+		}
+
+		std::shared_ptr<IndexBuffer> quadIBT = std::make_shared<IndexBuffer>(quadIndicesT, s_Data.MaxIndices);
+		s_Data.TriangleVertexArray = std::make_shared<VertexArray>();
+		s_Data.TriangleVertexBuffer = std::make_shared<VertexBuffer>(s_Data.MaxVertices * sizeof(TriangleVertex));
+		s_Data.TriangleVertexBuffer->SetLayout({
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float4, "a_Color"    },
+			{ ShaderDataType::Int,    "a_EntityID" }
+			});
+
+		s_Data.TriangleVertexArray->AddVertexBuffer(s_Data.TriangleVertexBuffer);
+
+		s_Data.TriangleVertexArray->SetIndexBuffer(quadIB);
+		s_Data.TriangleVertexBufferBase = new TriangleVertex[s_Data.MaxVertices];
+
+		delete[] quadIndicesT;
+
 		s_Data.WhiteTexture = std::make_shared<Texture>(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
@@ -131,6 +212,8 @@ namespace PhySim {
 
 		s_Data.QuadShader = std::make_shared<Shader>("../assets/shaders/Renderer2D_Quad.glsl");
 		s_Data.CircleShader = std::make_shared<Shader>("../assets/shaders/Renderer2D_Circle.glsl");
+		s_Data.LineShader = std::make_shared<Shader>("../assets/shaders/Renderer2D_Line.glsl");
+		s_Data.TriangleShader = std::make_shared<Shader>("../assets/shaders/Renderer2D_Triangle.glsl");
 		
 		s_Data.QuadShader->Bind();
 		s_Data.QuadShader->UploadUniformIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
@@ -151,7 +234,14 @@ namespace PhySim {
 
 	void Renderer2D::BeginScene(ProjectionData& projectionData)
 	{
+		s_Data.QuadShader->Bind();
 		s_Data.QuadShader->UploadUniformMat4("u_ViewProjection", projectionData.GetViewProjectionMatrix());
+		s_Data.CircleShader->Bind();
+		s_Data.CircleShader->UploadUniformMat4("u_ViewProjection", projectionData.GetViewProjectionMatrix());
+		s_Data.LineShader->Bind();
+		s_Data.LineShader->UploadUniformMat4("u_ViewProjection", projectionData.GetViewProjectionMatrix());
+		s_Data.TriangleShader->Bind();
+		s_Data.TriangleShader->UploadUniformMat4("u_ViewProjection", projectionData.GetViewProjectionMatrix());
 
 		StartBatch();
 	}
@@ -163,7 +253,9 @@ namespace PhySim {
 
 	void Renderer2D::Flush()
 	{
-		/*if (s_Data.QuadIndexCount)
+
+		PS_INFO("{0}", s_Data.LineWidth);
+		if (s_Data.QuadIndexCount)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 			s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
@@ -174,8 +266,8 @@ namespace PhySim {
 
 			s_Data.QuadShader->Bind();
 			Renderer::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
-		}*/
-
+		}
+		
 		if (s_Data.CircleIndexCount)
 		{
 			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.CircleVertexBufferPtr - (uint8_t*)s_Data.CircleVertexBufferBase);
@@ -183,6 +275,25 @@ namespace PhySim {
 
 			s_Data.CircleShader->Bind();
 			Renderer::DrawIndexed(s_Data.CircleVertexArray, s_Data.CircleIndexCount);
+		}
+
+		if (s_Data.LineVertexCount)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.LineVertexBufferPtr - (uint8_t*)s_Data.LineVertexBufferBase);
+			s_Data.LineVertexBuffer->SetData(s_Data.LineVertexBufferBase, dataSize);
+
+			s_Data.LineShader->Bind();
+			Renderer::SetLineWidth(s_Data.LineWidth);
+			Renderer::DrawLines(s_Data.LineVertexArray, s_Data.LineVertexCount);
+		}
+		
+		if (s_Data.TriangleVertexCount)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.TriangleVertexBufferPtr - (uint8_t*)s_Data.TriangleVertexBufferBase);
+			s_Data.TriangleVertexBuffer->SetData(s_Data.TriangleVertexBufferBase, dataSize);
+
+			s_Data.TriangleShader->Bind();
+			Renderer::DrawIndexed(s_Data.TriangleVertexArray, s_Data.TriangleVertexCount);
 		}
 	}
 
@@ -193,6 +304,12 @@ namespace PhySim {
 
 		s_Data.CircleIndexCount = 0;
 		s_Data.CircleVertexBufferPtr = s_Data.CircleVertexBufferBase;
+
+		s_Data.LineVertexCount = 0;
+		s_Data.LineVertexBufferPtr = s_Data.LineVertexBufferBase;
+
+		s_Data.TriangleVertexCount = 0;
+		s_Data.TriangleVertexBufferPtr = s_Data.TriangleVertexBufferBase;
 
 		s_Data.TextureSlotIndex = 1;
 	}
@@ -222,17 +339,68 @@ namespace PhySim {
 		s_Data.CircleIndexCount += 6;
 	}
 
+	void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, int index)
+	{
+		s_Data.LineVertexBufferPtr->Position = p0;
+		s_Data.LineVertexBufferPtr->Color = color;
+		s_Data.LineVertexBufferPtr->Index = index;
+		s_Data.LineVertexBufferPtr++;
+
+		s_Data.LineVertexBufferPtr->Position = p1;
+		s_Data.LineVertexBufferPtr->Color = color;
+		s_Data.LineVertexBufferPtr->Index = index;
+		s_Data.LineVertexBufferPtr++;
+
+		s_Data.LineVertexCount += 2;
+	}
+
+	void Renderer2D::SetLineWidth(float width)
+	{
+		s_Data.LineWidth = width;
+	}
+
+	float Renderer2D::GetLineWidth()
+	{
+		return s_Data.LineWidth;
+	}
+
+	void Renderer2D::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int index)
+	{
+		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+
+		DrawLine(p0, p1, color);
+		DrawLine(p1, p2, color);
+		DrawLine(p2, p3, color);
+		DrawLine(p3, p0, color);
+	}
+
+	void Renderer2D::DrawRect(const glm::mat4& transform, const glm::vec4& color, int index)
+	{
+		glm::vec3 lineVertices[4];
+		for (size_t i = 0; i < 4; i++)
+			lineVertices[i] = transform * s_Data.QuadVertexPositions[i];
+
+		DrawLine(lineVertices[0], lineVertices[1], color);
+		DrawLine(lineVertices[1], lineVertices[2], color);
+		DrawLine(lineVertices[2], lineVertices[3], color);
+		DrawLine(lineVertices[3], lineVertices[0], color);
+	}
+
+
 	void Renderer2D::DrawQuad(const Entity& entity)
 	{
 		DrawRotatedQuad(entity.m_Translation, { entity.m_Scale.x, entity.m_Scale.y }, entity.m_Rotation.z, entity.spriteComponent->m_Color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, int index)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, size, color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color, int index)
 	{
 		
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
@@ -241,12 +409,45 @@ namespace PhySim {
 		DrawQuad(transform, color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawTriangle(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color, int index)
+	{
+		const float textureIndex = 0.0f;
+		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		const float tilingFactor = 1.0f;
+
+		if (s_Data.TriangleVertexCount >= Renderer2DData::MaxIndices)
+			NextBatch();
+		
+		s_Data.TriangleVertexBufferPtr->Position = p0;
+		s_Data.TriangleVertexBufferPtr->Color = color;
+		s_Data.TriangleVertexBufferPtr->Index = index;
+		s_Data.TriangleVertexBufferPtr++;
+			   
+		s_Data.TriangleVertexBufferPtr->Position = p1;
+		s_Data.TriangleVertexBufferPtr->Color = color;
+		s_Data.TriangleVertexBufferPtr->Index = index;
+		s_Data.TriangleVertexBufferPtr++;
+
+		s_Data.TriangleVertexBufferPtr->Position = p2;
+		s_Data.TriangleVertexBufferPtr->Color = color;
+		s_Data.TriangleVertexBufferPtr->Index = index;
+		s_Data.TriangleVertexBufferPtr++;
+
+		s_Data.TriangleVertexCount += 3;
+
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor, int index)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawTriangle(const glm::mat4& transform, const glm::vec4& color, int index)
+	{
+		DrawQuad(transform, Application::Get().TriangleTexture, index, 1, color);
+	}
+
+	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor, int index)
 	{
 		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -322,33 +523,33 @@ namespace PhySim {
 		s_Data.QuadIndexCount += 6;
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color, int index)
 	{
-		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, color);
+		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, color, index);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color, int index)
 	{
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		DrawQuad(transform, color);
+		DrawQuad(transform, color, index);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor, int index)
 	{
-		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor);
+		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture, tilingFactor, tintColor, index);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor)
+	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor, int index)
 	{
 
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
 			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
 
-		DrawQuad(transform, texture, -1, tilingFactor, tintColor);
+		DrawQuad(transform, texture, index, tilingFactor, tintColor);
 	}
 }

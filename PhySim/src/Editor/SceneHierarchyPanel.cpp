@@ -47,10 +47,10 @@ namespace PhySim {
 		if (ImGui::BeginPopupContextWindow(0, 1, false))
 		{
 			if (ImGui::MenuItem("Create Quad"))
-				m_Context->CreteQuad("Quad");
+				m_Context->CreteQuad("quad");
 
 			if (ImGui::MenuItem("Create Circle"))
-				m_Context->CreteCircle("Circle");
+				m_Context->CreteCircle("circle");
 
 			ImGui::EndPopup();
 		}
@@ -154,6 +154,8 @@ namespace PhySim {
 			if (ImGui::MenuItem("Delete Entity"))
 				entityDeleted = true;
 
+			
+
 			ImGui::EndPopup();
 		}
 
@@ -179,6 +181,41 @@ namespace PhySim {
 		std::string name = entity->m_Name;
 
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
+
+		if (ImGui::Button("Add Physics"))
+			ImGui::OpenPopup("AddComponent");
+
+		if (m_SelectionIndex != -1 && ImGui::BeginPopup("AddComponent"))
+		{
+			if (!m_Context->m_Entities[m_SelectionIndex]->bc2d)
+			{
+				if (ImGui::MenuItem("Box"))
+				{
+					m_Context->m_Entities[m_SelectionIndex]->bc2d = new BoxCollider2DComponent();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (!m_Context->m_Entities[m_SelectionIndex]->cc2d)
+			{
+				if (ImGui::MenuItem("Circle"))
+				{
+					m_Context->m_Entities[m_SelectionIndex]->cc2d = new CircleCollider2DComponent();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (!m_Context->m_Entities[m_SelectionIndex]->tc2d)
+			{
+				if (ImGui::MenuItem("Triangle"))
+				{
+					m_Context->m_Entities[m_SelectionIndex]->tc2d = new TriangleCollider2DComponent();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			ImGui::EndPopup();
+		}
 
 		char buffer[256];
 		memset(buffer, 0, sizeof(buffer));
@@ -221,6 +258,10 @@ namespace PhySim {
 				ImGui::TreePop();
 			}
 
+			ImGui::Spacing();
+			ImGui::Spacing();
+			ImGui::Spacing();
+
 			if (ImGui::TreeNodeEx((void*)(entity + 2), treeNodeFlags, "Texture"))
 			{
 				
@@ -243,39 +284,103 @@ namespace PhySim {
 				ImGui::TreePop();
 			}
 		}
-		if (entity->rb2d)
+
+		if (entity->circleComponent)
 		{
-			const char* bodyTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
-			const char* currentBodyTypeString = bodyTypeStrings[(int)entity->rb2d->Type];
-			if (ImGui::BeginCombo("Body Type", currentBodyTypeString))
+			if (ImGui::TreeNodeEx((void*)(entity + 3), treeNodeFlags, "Sprite"))
 			{
-				for (int i = 0; i < 2; i++)
-				{
-					bool isSelected = currentBodyTypeString == bodyTypeStrings[i];
-					if (ImGui::Selectable(bodyTypeStrings[i], isSelected))
-					{
-						currentBodyTypeString = bodyTypeStrings[i];
-						entity->rb2d->Type = (Rigidbody2DComponent::BodyType)i;
-					}
+				auto& color = entity->circleComponent->m_Color;
+				ImGui::ColorEdit4("Color", glm::value_ptr(color));
+				ImGui::DragFloat("Thickness", &(entity->circleComponent->m_Thickness), 0.025f, 0.0f, 1.0f);
+				ImGui::DragFloat("Fade", &entity->circleComponent->m_Fade, 0.00025f, 0.0f, 1.0f);
 
-					if (isSelected)
-						ImGui::SetItemDefaultFocus();
-				}
+				ImGui::TreePop();
+			}
+		}
 
-				ImGui::EndCombo();
+		if (entity->triangleComponent)
+		{
+			if (ImGui::TreeNodeEx((void*)(entity + 4), treeNodeFlags, "Sprite"))
+			{
+				auto& color = entity->triangleComponent->m_Color;
+				ImGui::ColorEdit4("Color", glm::value_ptr(color));
+
+				ImGui::TreePop();
 			}
 
-			ImGui::Checkbox("Fixed Rotation", &entity->rb2d->FixedRotation);
+			ImGui::Spacing();
+			ImGui::Spacing();
+			ImGui::Spacing();
+
 		}
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		if (entity->rb2d)
+		{
+			if (ImGui::TreeNodeEx((void*)(entity + 4), treeNodeFlags, "Rigid Body"))
+			{
+				const char* bodyTypeStrings[] = { "Static", "Dynamic", "Kinematic" };
+				const char* currentBodyTypeString = bodyTypeStrings[(int)entity->rb2d->Type];
+				if (ImGui::BeginCombo("Body Type", currentBodyTypeString))
+				{
+					for (int i = 0; i < 2; i++)
+					{
+						bool isSelected = currentBodyTypeString == bodyTypeStrings[i];
+						if (ImGui::Selectable(bodyTypeStrings[i], isSelected))
+						{
+							currentBodyTypeString = bodyTypeStrings[i];
+							entity->rb2d->Type = (Rigidbody2DComponent::BodyType)i;
+						}
+
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+					ImGui::EndCombo();
+				}
+
+				ImGui::Checkbox("Fixed Rotation", &entity->rb2d->FixedRotation);
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
 
 		if (entity->bc2d)
 		{
-			ImGui::DragFloat2("Offset", glm::value_ptr(entity->bc2d->Offset));
-			ImGui::DragFloat2("Size", glm::value_ptr(entity->bc2d->Size));
-			ImGui::DragFloat("Density", &entity->bc2d->Density, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Friction", &entity->bc2d->Friction, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Restitution", &entity->bc2d->Restitution, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Restitution Threshold", &entity->bc2d->RestitutionThreshold, 0.01f, 0.0f);
+			if (ImGui::TreeNodeEx((void*)(entity + 5), treeNodeFlags, "Box Collider"))
+			{
+				//ImGui::DragFloat2("Offset", glm::value_ptr(entity->bc2d->Offset));
+				ImGui::DragFloat2("Size", glm::value_ptr(entity->bc2d->Size), 0.01f);
+				ImGui::DragFloat("Density", &entity->bc2d->Density, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Friction", &entity->bc2d->Friction, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution", &entity->bc2d->Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution Threshold", &entity->bc2d->RestitutionThreshold, 0.01f, 0.0f);
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::Spacing();
+		ImGui::Spacing();
+		ImGui::Spacing();
+
+		if (entity->cc2d)
+		{
+			if (ImGui::TreeNodeEx((void*)(entity + 6), treeNodeFlags, "Circle Collider"))
+			{
+				//ImGui::DragFloat2("Offset", glm::value_ptr(entity->cc2d->Offset));
+				ImGui::DragFloat("Radius", &entity->cc2d->Radius, 0.01f);
+				ImGui::DragFloat("Density", &entity->cc2d->Density, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Friction", &entity->cc2d->Friction, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution", &entity->cc2d->Restitution, 0.01f, 0.0f, 1.0f);
+				ImGui::DragFloat("Restitution Threshold", &entity->cc2d->RestitutionThreshold, 0.01f, 0.0f);
+				ImGui::TreePop();
+			}
 		}
 	}
 }

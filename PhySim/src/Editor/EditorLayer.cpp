@@ -23,6 +23,8 @@
 
 #include "Core/Application.h"
 
+#include "OpenGL/Renderer2D.h"
+
 namespace PhySim {
 
 	EditorLayer::EditorLayer()
@@ -41,7 +43,7 @@ namespace PhySim {
 
 		m_PlayIcon = std::make_shared<Texture>("../assets/Icons/Play.png");
 		m_StopIcon = std::make_shared<Texture>("../assets/Icons/Stop.png");
-
+	
 		m_ActiveScene = Application::Get().m_Scene;
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
@@ -53,7 +55,7 @@ namespace PhySim {
 	}
 
 	void EditorLayer::OnUpdate(Timestep ts)
-	{
+	{		
 		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
@@ -120,6 +122,7 @@ namespace PhySim {
 			m_HoveredEntityIndex = -2;
 		}
 
+		OnOverlayRender();
 		m_Framebuffer->UnBind();
 	}
 
@@ -293,6 +296,10 @@ namespace PhySim {
 		ImGui::PopStyleVar();
 
 		UI_Toolbar();
+
+		ImGui::Begin("Settings");
+		ImGui::Checkbox("Show physics colliders", &m_ShowPhyCol);
+		ImGui::End();
 
 		ImGui::End();
 	}
@@ -495,5 +502,53 @@ namespace PhySim {
 		Entity* selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (selectedEntity)
 			m_ActiveScene->DuplicateEntity(selectedEntity);
+	}
+
+	void EditorLayer::OnOverlayRender()
+	{
+		Renderer2D::BeginScene(Application::Get().GetProjectionData());
+
+		if (m_ShowPhyCol)
+		{
+			// Box Colliders
+			
+			for (auto entity : m_ActiveScene->m_Entities)
+			{
+				if (entity->bc2d)
+				{
+					glm::vec3 translation = entity->m_Translation /*+ glm::vec3(entity->bc2d->Offset, 0.001f)*/;
+					glm::vec3 scale = entity->m_Scale * glm::vec3(entity->bc2d->Size * 2.0f, 1.0f);
+
+					translation.z = 1;
+					glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
+						* glm::rotate(glm::mat4(1.0f), entity->m_Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
+						* glm::scale(glm::mat4(1.0f), scale);
+
+					Renderer2D::DrawRect(transform, glm::vec4(0, 1, 0, 1));
+				}
+				if (entity->cc2d)
+				{
+					glm::vec3 translation = entity->m_Translation /*+ glm::vec3(entity->cc2d->Offset, 0.001f)*/;
+					glm::vec3 scale = entity->m_Scale * glm::vec3(entity->cc2d->Radius * 2.0f);
+
+					translation.z = 1;
+					glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
+						* glm::scale(glm::mat4(1.0f), scale);
+
+					Renderer2D::DrawCircle(transform, glm::vec4(0, 1, 0, 1), 0.01f);
+				}
+				if (entity->tc2d)
+				{
+					glm::vec3 translation = entity->m_Translation /*+ glm::vec3(entity->bc2d->Offset, 0.001f)*/;
+					glm::vec3 scale = entity->m_Scale * glm::vec3(entity->tc2d->Size * 2.0f, 1.0f);
+
+					Renderer2D::DrawLine({ translation.x - scale.x / 2, translation.y - scale.y / 2, 1 }, { translation.x - scale.x / 2, translation.y + scale.y / 2, 1 }, glm::vec4(0, 1, 0, 1));
+					Renderer2D::DrawLine({ translation.x - scale.x / 2, translation.y - scale.y / 2, 1 }, { translation.x + scale.x / 2, translation.y - scale.y / 2, 1 }, glm::vec4(0, 1, 0, 1));
+					Renderer2D::DrawLine({ translation.x + scale.x / 2, translation.y - scale.y / 2, 1 }, { translation.x - scale.x / 2, translation.y + scale.y / 2, 1 }, glm::vec4(0, 1, 0, 1));
+				}
+			}
+		}
+
+		Renderer2D::EndScene();
 	}
 }

@@ -19,6 +19,7 @@ namespace PhySim {
 	Application::Application()
 		: m_ProjectionData(-10.0f, 10, -10.0f, 10.0f)
 	{
+
 		s_Instance = this;
 
 		m_Window = std::unique_ptr<Window>(Window::Create());
@@ -40,21 +41,29 @@ namespace PhySim {
 
 		Entity* quad2 = new Entity("quad2");
 		quad2->spriteComponent = new SpriteComponent();
-		quad2->m_Translation = { 3.5f, 3.5f, 1.0f };
+		quad2->m_Translation = { 3.5f, 3.5f, 0.0f };
 		quad2->spriteComponent->m_Color = { 0.5f, 1.0f, 0.5f, 1.0f };
 		m_Scene->AddEntity(quad2);
 
 		Entity* quad3 = new Entity("quad3");
 		quad3->spriteComponent = new SpriteComponent();
-		quad3->m_Translation = { 5.3f, 5.3f, 1.0f };
+		quad3->m_Translation = { 5.3f, 5.3f, 0.0f };
 		quad3->spriteComponent->m_Color = { 1.0f, 0.5f, 0.5f, 1.0f };
 		m_Scene->AddEntity(quad3);
 
 		Entity* circle1 = new Entity("circle1");
 		circle1->circleComponent = new CircleComponent();
-		circle1->m_Translation = { 5.3f, 5.3f, 1.0f };
+		circle1->m_Translation = { 2.3f, 2.3f, 0.0f };
 		circle1->circleComponent->m_Color = { 1.0f, 1.0f, 1.0f, 1.0f };
 		m_Scene->AddEntity(circle1);
+
+		Entity* triangle = new Entity("triangle");
+		triangle->triangleComponent = new TriangleComponent();
+		triangle->m_Translation = { -5.3f, -5.3f, 0.0f };
+		triangle->triangleComponent->m_Color = { 0.0f, 1.0f, 1.0f, 1.0f };
+		m_Scene->AddEntity(triangle);
+
+		TriangleTexture = std::make_shared<Texture>("../assets/Textures/1x/Triangle.png");
 	}
 
 	Application::~Application()

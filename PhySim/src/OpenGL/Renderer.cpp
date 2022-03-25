@@ -10,12 +10,13 @@ namespace PhySim {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_LINE_SMOOTH);
 		Renderer2D::Init();
 	}
 
 	void Renderer::BeginScene()
 	{
-
+		
 	}
 
 	void Renderer::EndScene()
@@ -25,6 +26,7 @@ namespace PhySim {
 
 	void Renderer::Submit(const std::shared_ptr<Shader>& shader, const std::shared_ptr<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
+		shader->Bind();
 		shader->UploadUniformMat4("u_Transform", transform);
 		vertexArray->Bind();
 		DrawIndexed(vertexArray);
@@ -42,8 +44,23 @@ namespace PhySim {
 
 	void Renderer::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)
 	{
+		vertexArray->Bind();
 		uint32_t count = indexCount ? vertexArray->GetIndexBuffer()->GetCount() : indexCount;
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
+
+	void Renderer::DrawLines(const std::shared_ptr<VertexArray>& vertexArray, uint32_t vertexCount)
+	{
+		vertexArray->Bind();
+		glDrawArrays(GL_LINES, 0, vertexCount);
+	}
+
+	void Renderer::SetLineWidth(float width)
+	{
+		PS_TRACE("{0}", width);
+		glLineWidth(width);
+	}
 }
+
+//Try to compile Hazel by modifing shaders // no vulkan

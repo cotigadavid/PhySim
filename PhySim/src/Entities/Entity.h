@@ -29,7 +29,7 @@ namespace PhySim {
 	struct BoxCollider2DComponent
 	{
 		glm::vec2 Offset = { 0.0f, 0.0f };
-		glm::vec2 Size = { 0.1f, 0.1f };
+		glm::vec2 Size = { 0.5f, 0.5f };
 
 		float Density = 1.0f;
 		float Friction = 0.5f;
@@ -40,6 +40,58 @@ namespace PhySim {
 
 		BoxCollider2DComponent() = default;
 		BoxCollider2DComponent(const BoxCollider2DComponent& other)
+		{
+			Offset = other.Offset;
+			Size = other.Size;
+
+			Density = other.Density;
+			Friction = other.Friction;
+			Restitution = other.Restitution;
+			RestitutionThreshold = other.RestitutionThreshold;
+			RuntimeFixture = other.RuntimeFixture;
+		}
+	};
+
+	struct CircleCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		float Radius = 0.5f;
+
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float RestitutionThreshold = 0.5f;
+
+		void* RuntimeFixture = nullptr;
+
+		CircleCollider2DComponent() = default;
+		CircleCollider2DComponent(const CircleCollider2DComponent& other)
+		{
+			Offset = other.Offset;
+			Radius = other.Radius;
+
+			Density = other.Density;
+			Friction = other.Friction;
+			Restitution = other.Restitution;
+			RestitutionThreshold = other.RestitutionThreshold;
+			RuntimeFixture = other.RuntimeFixture;
+		}
+	};
+
+	struct TriangleCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		glm::vec2 Size = { 0.5f, 0.5f };
+
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float RestitutionThreshold = 0.5f;
+
+		void* RuntimeFixture = nullptr;
+
+		TriangleCollider2DComponent() = default;
+		TriangleCollider2DComponent(const TriangleCollider2DComponent& other)
 		{
 			Offset = other.Offset;
 			Size = other.Size;
@@ -81,6 +133,21 @@ namespace PhySim {
 			m_Color = other.m_Color;
 			m_Thickness = other.m_Thickness;
 			m_Fade = other.m_Fade;
+		}
+	};
+
+	class TriangleComponent
+	{
+	public:
+
+		glm::vec4 m_Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float m_TilingFactor = 1;
+
+		TriangleComponent() = default;
+		TriangleComponent(const TriangleComponent& other)
+		{
+			m_Color = other.m_Color;
+			m_TilingFactor = other.m_TilingFactor;
 		}
 	};
 
@@ -126,8 +193,11 @@ namespace PhySim {
 
 		Rigidbody2DComponent* rb2d = nullptr;
 		BoxCollider2DComponent* bc2d = nullptr;
+		CircleCollider2DComponent* cc2d = nullptr;
+		TriangleCollider2DComponent* tc2d = nullptr;
 		SpriteComponent* spriteComponent = nullptr;
 		CircleComponent* circleComponent = nullptr;
+		TriangleComponent* triangleComponent = nullptr;
 
 		Scene* m_Scene = nullptr;
 	};

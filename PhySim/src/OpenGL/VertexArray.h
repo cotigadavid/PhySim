@@ -16,7 +16,7 @@ namespace PhySim {
 		void Bind() const;
 		void UnBind() const;
 
-		void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer);
+		void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer, int a = 0);
 		void SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer);
 
 		const std::vector<std::shared_ptr<VertexBuffer>>& GetVertexBuffers() const { return m_VertexBuffers; }
