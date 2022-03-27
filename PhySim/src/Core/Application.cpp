@@ -63,7 +63,7 @@ namespace PhySim {
 		triangle->triangleComponent->m_Color = { 0.0f, 1.0f, 1.0f, 1.0f };
 		m_Scene->AddEntity(triangle);
 
-		TriangleTexture = std::make_shared<Texture>("../assets/Textures/1x/Triangle.png");
+		TriangleTexture = std::make_shared<Texture>("../assets/Textures/Triangle.png");
 	}
 
 	Application::~Application()

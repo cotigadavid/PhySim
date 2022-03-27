@@ -96,6 +96,8 @@ namespace PhySim {
 		float LineWidth = 2.0f;
 
 		glm::vec4 QuadVertexPositions[4];
+
+		glm::vec4 TriangleVertexPositions[3];
 	};
 
 	static Renderer2DData s_Data;
@@ -113,7 +115,7 @@ namespace PhySim {
 			{ ShaderDataType::Float, "a_TexIndex" },
 			{ ShaderDataType::Float, "a_TilingFactor" },
 			{ ShaderDataType::Int, "a_Index" }
-		});
+			});
 
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
@@ -150,11 +152,46 @@ namespace PhySim {
 			{ ShaderDataType::Float,  "a_Thickness"     },
 			{ ShaderDataType::Float,  "a_Fade"          },
 			{ ShaderDataType::Int,    "a_EntityID"      }
-		});
+			});
 
 		s_Data.CircleVertexArray->AddVertexBuffer(s_Data.CircleVertexBuffer);
 		s_Data.CircleVertexArray->SetIndexBuffer(quadIB); // Use quad IB
 		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
+
+		{
+			uint32_t* quadIndicesT = new uint32_t[s_Data.MaxIndices];
+
+			offset = 1;
+			for (uint32_t i = 0; i < s_Data.MaxIndices; i += 3)
+			{
+				quadIndicesT[i] = offset + 0;
+				quadIndicesT[i] = offset + 1;
+				quadIndicesT[i] = offset + 2;
+
+				offset += 3;
+			}
+
+			for (uint32_t i = 0; i < s_Data.MaxIndices; i++)
+			{
+				quadIndicesT[i] = i;
+			}
+
+			std::shared_ptr<IndexBuffer> quadIBT = std::make_shared<IndexBuffer>(quadIndicesT, s_Data.MaxIndices);
+			s_Data.TriangleVertexArray = std::make_shared<VertexArray>();
+			s_Data.TriangleVertexBuffer = std::make_shared<VertexBuffer>(s_Data.MaxVertices * sizeof(TriangleVertex));
+			s_Data.TriangleVertexBuffer->SetLayout({
+				{ ShaderDataType::Float3, "a_Position" },
+				{ ShaderDataType::Float4, "a_Color"    },
+				{ ShaderDataType::Int,    "a_EntityID" }
+				});
+
+			s_Data.TriangleVertexArray->AddVertexBuffer(s_Data.TriangleVertexBuffer);
+
+			s_Data.TriangleVertexArray->SetIndexBuffer(quadIBT);
+			s_Data.TriangleVertexBufferBase = new TriangleVertex[s_Data.MaxVertices];
+
+			delete[] quadIndicesT;
+		}
 
 		//Lines
 		s_Data.LineVertexArray = std::make_shared<VertexArray>();
@@ -163,45 +200,11 @@ namespace PhySim {
 			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color"    },
 			{ ShaderDataType::Int,    "a_EntityID" }
-		});
+			});
 		s_Data.LineVertexArray->AddVertexBuffer(s_Data.LineVertexBuffer);
 		s_Data.LineVertexBufferBase = new LineVertex[s_Data.MaxVertices];
-			
-		//Triangles 
-
-		uint32_t* quadIndicesT = new uint32_t[s_Data.MaxIndices];
-
-		offset = 1;
-		for (uint32_t i = 0; i < s_Data.MaxIndices; i += 3)
-		{
-			quadIndicesT[i] = offset + 0;
-			quadIndicesT[i] = offset + 1;
-			quadIndicesT[i] = offset + 2;
-
-			offset += 3;
-		}
-
-		for (uint32_t i = 0; i < s_Data.MaxIndices; i++)
-		{
-			quadIndicesT[i] = i;
-		}
-
-		std::shared_ptr<IndexBuffer> quadIBT = std::make_shared<IndexBuffer>(quadIndicesT, s_Data.MaxIndices);
-		s_Data.TriangleVertexArray = std::make_shared<VertexArray>();
-		s_Data.TriangleVertexBuffer = std::make_shared<VertexBuffer>(s_Data.MaxVertices * sizeof(TriangleVertex));
-		s_Data.TriangleVertexBuffer->SetLayout({
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color"    },
-			{ ShaderDataType::Int,    "a_EntityID" }
-			});
-
-		s_Data.TriangleVertexArray->AddVertexBuffer(s_Data.TriangleVertexBuffer);
-
-		s_Data.TriangleVertexArray->SetIndexBuffer(quadIB);
-		s_Data.TriangleVertexBufferBase = new TriangleVertex[s_Data.MaxVertices];
-
-		delete[] quadIndicesT;
-
+		
+		
 		s_Data.WhiteTexture = std::make_shared<Texture>(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;
 		s_Data.WhiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
@@ -225,6 +228,9 @@ namespace PhySim {
 		s_Data.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };
 		s_Data.QuadVertexPositions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };
 		
+		s_Data.TriangleVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+		s_Data.TriangleVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
+		s_Data.TriangleVertexPositions[2] = { -0.5f, 0.5f, 0.0f, 1.0f };
 	}
 
 	void Renderer2D::ShutDown()
@@ -409,32 +415,30 @@ namespace PhySim {
 		DrawQuad(transform, color);
 	}
 
-	void Renderer2D::DrawTriangle(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color, int index)
+	void Renderer2D::DrawTriangle(const glm::mat4& transform, const glm::vec4& color, int index)
 	{
-		const float textureIndex = 0.0f;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		const float tilingFactor = 1.0f;
 
 		if (s_Data.TriangleVertexCount >= Renderer2DData::MaxIndices)
 			NextBatch();
 		
-		s_Data.TriangleVertexBufferPtr->Position = p0;
+		s_Data.TriangleVertexBufferPtr->Position = transform * s_Data.TriangleVertexPositions[0];
 		s_Data.TriangleVertexBufferPtr->Color = color;
 		s_Data.TriangleVertexBufferPtr->Index = index;
 		s_Data.TriangleVertexBufferPtr++;
 			   
-		s_Data.TriangleVertexBufferPtr->Position = p1;
+		s_Data.TriangleVertexBufferPtr->Position = transform * s_Data.TriangleVertexPositions[1];
 		s_Data.TriangleVertexBufferPtr->Color = color;
 		s_Data.TriangleVertexBufferPtr->Index = index;
 		s_Data.TriangleVertexBufferPtr++;
 
-		s_Data.TriangleVertexBufferPtr->Position = p2;
+		s_Data.TriangleVertexBufferPtr->Position = transform * s_Data.TriangleVertexPositions[2];
 		s_Data.TriangleVertexBufferPtr->Color = color;
 		s_Data.TriangleVertexBufferPtr->Index = index;
 		s_Data.TriangleVertexBufferPtr++;
 
 		s_Data.TriangleVertexCount += 3;
 
+		PS_TRACE("{0}", index);
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor, int index)
@@ -442,10 +446,10 @@ namespace PhySim {
 		DrawQuad({ position.x, position.y, 0.0f }, size, texture, tilingFactor, tintColor);
 	}
 
-	void Renderer2D::DrawTriangle(const glm::mat4& transform, const glm::vec4& color, int index)
+	/*void Renderer2D::DrawTriangle(const glm::mat4& transform, const glm::vec4& color, int index)
 	{
 		DrawQuad(transform, Application::Get().TriangleTexture, index, 1, color);
-	}
+	}*/
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const std::shared_ptr<Texture>& texture, float tilingFactor, const glm::vec4& tintColor, int index)
 	{

@@ -33,6 +33,5 @@
 			
 			color = v_Color;
 						
-
 			color2 = v_Index;
 		}

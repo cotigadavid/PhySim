@@ -45,7 +45,11 @@ namespace PhySim {
 	void Renderer::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)
 	{
 		vertexArray->Bind();
-		uint32_t count = indexCount ? vertexArray->GetIndexBuffer()->GetCount() : indexCount;
+		uint32_t count;
+		if (vertexArray->GetIndexBuffer())
+			count = indexCount ? vertexArray->GetIndexBuffer()->GetCount() : indexCount;
+		else
+			count = indexCount;
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}

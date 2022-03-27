@@ -29,8 +29,8 @@ namespace PhySim {
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1, float fade = 0.005, int index = -1);
 
-		static void DrawTriangle(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color, int index = -1);
 		static void DrawTriangle(const glm::mat4& transform, const glm::vec4& color, int index = -1);
+		//static void DrawTriangle(const glm::mat4& transform, const glm::vec4& color, int index = -1);
 
 		static void DrawQuad(const Entity& entity);
 

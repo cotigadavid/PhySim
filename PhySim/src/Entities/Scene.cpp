@@ -222,7 +222,6 @@ namespace PhySim {
 			}
 			if (entity->triangleComponent)
 			{
-				entity->m_Translation.z = -0.9;
 				Renderer2D::DrawTriangle(entity->GetTransform(), entity->triangleComponent->m_Color, index);
 			}
 		}
