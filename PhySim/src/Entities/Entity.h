@@ -7,6 +7,12 @@
 
 #include "OpenGL/Texture.h"
 
+#include "box2d/b2_world.h"
+#include "box2d/b2_body.h"
+#include "box2d/b2_fixture.h"
+#include "box2d/b2_polygon_shape.h"
+#include "box2d/b2_circle_shape.h"
+
 namespace PhySim {
 
 	struct Rigidbody2DComponent
@@ -15,7 +21,12 @@ namespace PhySim {
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
 
-		void* RuntimeBody = nullptr;
+		float VerticalForce = 1500.0f;
+		float HorizontalForce = 0.0f;
+		float VerticalImpulse = 0.0f;
+		float HorizontalImpulse = 0.0f;
+
+		b2Body* RuntimeBody = nullptr;
 
 		Rigidbody2DComponent() = default;
 		Rigidbody2DComponent(const Rigidbody2DComponent& other)

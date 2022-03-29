@@ -3,6 +3,7 @@
 #include "Core/Layer.h"
 #include "SceneHierarchyPanel.h"
 #include "ModelsPanel.h"
+#include "PhysicsPanel.h"
 
 #include "OpenGL/FrameBuffer.h"
 
@@ -67,8 +68,9 @@ namespace PhySim {
 
 		int m_HoveredEntityIndex;
 		// Panels
-		SceneHierarchyPanel m_SceneHierarchyPanel;
-		ModelsPanel m_ModelsPanel;
+		std::shared_ptr<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		std::shared_ptr<ModelsPanel> m_ModelsPanel;
+		std::shared_ptr<PhysicsPanel> m_PhysicsPanel;
 	};
 
 

@@ -19,6 +19,7 @@ namespace PhySim
 
 		void CreteQuad(const std::string& name);
 		void CreteCircle(const std::string& name);
+		void CreteTriangle(const std::string& name);
 
 		void DestroyEntity(Entity entity);
 

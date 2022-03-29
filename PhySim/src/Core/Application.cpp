@@ -39,7 +39,7 @@ namespace PhySim {
 		m_LayerStack.PushLayer(editorLayer);
 		editorLayer->OnAttach();
 
-		Entity* quad2 = new Entity("quad2");
+		/*Entity* quad2 = new Entity("quad2");
 		quad2->spriteComponent = new SpriteComponent();
 		quad2->m_Translation = { 3.5f, 3.5f, 0.0f };
 		quad2->spriteComponent->m_Color = { 0.5f, 1.0f, 0.5f, 1.0f };
@@ -61,7 +61,7 @@ namespace PhySim {
 		triangle->triangleComponent = new TriangleComponent();
 		triangle->m_Translation = { -5.3f, -5.3f, 0.0f };
 		triangle->triangleComponent->m_Color = { 0.0f, 1.0f, 1.0f, 1.0f };
-		m_Scene->AddEntity(triangle);
+		m_Scene->AddEntity(triangle);*/
 
 		TriangleTexture = std::make_shared<Texture>("../assets/Textures/Triangle.png");
 	}

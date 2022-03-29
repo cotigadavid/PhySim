@@ -141,23 +141,6 @@ namespace PhySim {
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] quadIndices;
 
-		//Circles 
-		s_Data.CircleVertexArray = std::make_shared<VertexArray>();
-
-		s_Data.CircleVertexBuffer = std::make_shared<VertexBuffer>(s_Data.MaxVertices * sizeof(CircleVertex));
-		s_Data.CircleVertexBuffer->SetLayout({
-			{ ShaderDataType::Float3, "a_WorldPosition" },
-			{ ShaderDataType::Float3, "a_LocalPosition" },
-			{ ShaderDataType::Float4, "a_Color"         },
-			{ ShaderDataType::Float,  "a_Thickness"     },
-			{ ShaderDataType::Float,  "a_Fade"          },
-			{ ShaderDataType::Int,    "a_EntityID"      }
-			});
-
-		s_Data.CircleVertexArray->AddVertexBuffer(s_Data.CircleVertexBuffer);
-		s_Data.CircleVertexArray->SetIndexBuffer(quadIB); // Use quad IB
-		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
-
 		{
 			uint32_t* quadIndicesT = new uint32_t[s_Data.MaxIndices];
 
@@ -182,7 +165,7 @@ namespace PhySim {
 			s_Data.TriangleVertexBuffer->SetLayout({
 				{ ShaderDataType::Float3, "a_Position" },
 				{ ShaderDataType::Float4, "a_Color"    },
-				{ ShaderDataType::Int,    "a_EntityID" }
+				{ ShaderDataType::Int,    "a_Index" }
 				});
 
 			s_Data.TriangleVertexArray->AddVertexBuffer(s_Data.TriangleVertexBuffer);
@@ -192,6 +175,23 @@ namespace PhySim {
 
 			delete[] quadIndicesT;
 		}
+
+		//Circles 
+		s_Data.CircleVertexArray = std::make_shared<VertexArray>();
+
+		s_Data.CircleVertexBuffer = std::make_shared<VertexBuffer>(s_Data.MaxVertices * sizeof(CircleVertex));
+		s_Data.CircleVertexBuffer->SetLayout({
+			{ ShaderDataType::Float3, "a_WorldPosition" },
+			{ ShaderDataType::Float3, "a_LocalPosition" },
+			{ ShaderDataType::Float4, "a_Color"         },
+			{ ShaderDataType::Float,  "a_Thickness"     },
+			{ ShaderDataType::Float,  "a_Fade"          },
+			{ ShaderDataType::Int,    "a_EntityID"      }
+			});
+
+		s_Data.CircleVertexArray->AddVertexBuffer(s_Data.CircleVertexBuffer);
+		s_Data.CircleVertexArray->SetIndexBuffer(quadIB); // Use quad IB
+		s_Data.CircleVertexBufferBase = new CircleVertex[s_Data.MaxVertices];
 
 		//Lines
 		s_Data.LineVertexArray = std::make_shared<VertexArray>();
@@ -417,9 +417,8 @@ namespace PhySim {
 
 	void Renderer2D::DrawTriangle(const glm::mat4& transform, const glm::vec4& color, int index)
 	{
-
-		if (s_Data.TriangleVertexCount >= Renderer2DData::MaxIndices)
-			NextBatch();
+		//if (s_Data.TriangleVertexCount >= Renderer2DData::MaxIndices)
+			//NextBatch();
 		
 		s_Data.TriangleVertexBufferPtr->Position = transform * s_Data.TriangleVertexPositions[0];
 		s_Data.TriangleVertexBufferPtr->Color = color;

@@ -3,12 +3,13 @@
 			
 		layout(location = 0) in vec3 a_Position;
 		layout(location = 1) in vec4 a_Color;
-		layout(location = 5) in int a_Index;		
+		layout(location = 2) in int a_Index;		
 
 		uniform mat4 u_ViewProjection;
+		
 
 		out vec4 v_Color;
-		flat out int v_Index;
+		out flat int v_Index;
 
 		void main()
 		{
@@ -25,7 +26,7 @@
 		layout(location = 1) out int color2;
 
 		in vec4 v_Color;
-		flat in int v_Index;
+		in flat int v_Index;
 
 
 		void main()

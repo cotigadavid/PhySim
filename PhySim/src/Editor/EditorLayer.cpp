@@ -44,9 +44,16 @@ namespace PhySim {
 		m_PlayIcon = std::make_shared<Texture>("../assets/Icons/Play.png");
 		m_StopIcon = std::make_shared<Texture>("../assets/Icons/Stop.png");
 	
+		m_SceneHierarchyPanel = std::make_shared<SceneHierarchyPanel>();
+		m_ModelsPanel = std::make_shared<ModelsPanel>();
+		m_PhysicsPanel = std::make_shared<PhysicsPanel>();
+
+		m_PhysicsPanel->SetSceneHierarchyPanel(m_SceneHierarchyPanel);
+
 		m_ActiveScene = Application::Get().m_Scene;
 
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_PhysicsPanel->m_Context = m_ActiveScene;
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnDetach()
@@ -56,6 +63,7 @@ namespace PhySim {
 
 	void EditorLayer::OnUpdate(Timestep ts)
 	{		
+
 		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
@@ -200,8 +208,9 @@ namespace PhySim {
 			ImGui::EndMenuBar();
 		}
 
-		m_SceneHierarchyPanel.OnImGuiRender();
-		m_ModelsPanel.OnImGuiRender();
+		m_SceneHierarchyPanel->OnImGuiRender();
+		m_ModelsPanel->OnImGuiRender();
+		m_PhysicsPanel->OnImGuiRender();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 
@@ -245,7 +254,7 @@ namespace PhySim {
 		}
 
 		// Gizmos
-		Entity* selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		Entity* selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 		if (selectedEntity && m_GizmoType != -1)
 		{
 			ImGuizmo::SetOrthographic(true);
@@ -395,6 +404,7 @@ namespace PhySim {
 		case Key::R:
 			m_GizmoType = ImGuizmo::OPERATION::SCALE;
 			break;
+			
 		}
 	}
 
@@ -403,8 +413,8 @@ namespace PhySim {
 		if (e.GetMouseButton() == Mouse::ButtonLeft && m_HoveredEntityIndex != -2)
 		{
 			PS_INFO("{0}", m_HoveredEntityIndex);
-			if (m_SceneHierarchyPanel.GetSelectionIndex() == -1 || !ImGuizmo::IsOver())
-				m_SceneHierarchyPanel.SetSelectionIndex(m_HoveredEntityIndex);
+			if (m_SceneHierarchyPanel->GetSelectionIndex() == -1 || !ImGuizmo::IsOver())
+				m_SceneHierarchyPanel->SetSelectionIndex(m_HoveredEntityIndex);
 		}
 		return false;
 	}
@@ -416,7 +426,7 @@ namespace PhySim {
 		m_SavedScene = Scene::CopyScene(m_ActiveScene);
 		m_ActiveScene->OnRuntimeStart();
 
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnSceneStop()
@@ -426,7 +436,7 @@ namespace PhySim {
 		m_ActiveScene->OnRuntimeStop();
 		m_ActiveScene = Scene::CopyScene(m_SavedScene);
 
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::NewScene()
@@ -499,7 +509,7 @@ namespace PhySim {
 		if (m_SceneState != SceneState::Edit)
 			return;
 
-		Entity* selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		Entity* selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 		if (selectedEntity)
 			m_ActiveScene->DuplicateEntity(selectedEntity);
 	}
@@ -542,9 +552,19 @@ namespace PhySim {
 					glm::vec3 translation = entity->m_Translation /*+ glm::vec3(entity->bc2d->Offset, 0.001f)*/;
 					glm::vec3 scale = entity->m_Scale * glm::vec3(entity->tc2d->Size * 2.0f, 1.0f);
 
-					Renderer2D::DrawLine({ translation.x - scale.x / 2, translation.y - scale.y / 2, 1 }, { translation.x - scale.x / 2, translation.y + scale.y / 2, 1 }, glm::vec4(0, 1, 0, 1));
-					Renderer2D::DrawLine({ translation.x - scale.x / 2, translation.y - scale.y / 2, 1 }, { translation.x + scale.x / 2, translation.y - scale.y / 2, 1 }, glm::vec4(0, 1, 0, 1));
-					Renderer2D::DrawLine({ translation.x + scale.x / 2, translation.y - scale.y / 2, 1 }, { translation.x - scale.x / 2, translation.y + scale.y / 2, 1 }, glm::vec4(0, 1, 0, 1));
+					glm::vec4 TriangleVertexPositions[3];
+
+					TriangleVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+					TriangleVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
+					TriangleVertexPositions[2] = { -0.5f, 0.5f, 0.0f, 1.0f };
+
+					glm::vec3 p0 = entity->GetTransform() * TriangleVertexPositions[0];
+					glm::vec3 p1 = entity->GetTransform() * TriangleVertexPositions[1];
+					glm::vec3 p2 = entity->GetTransform() * TriangleVertexPositions[2];
+
+					Renderer2D::DrawLine(p0, p1, glm::vec4(0, 1, 0, 1));
+					Renderer2D::DrawLine(p1, p2, glm::vec4(0, 1, 0, 1));
+					Renderer2D::DrawLine(p2, p0, glm::vec4(0, 1, 0, 1));
 				}
 			}
 		}

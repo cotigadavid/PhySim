@@ -52,6 +52,9 @@ namespace PhySim {
 			if (ImGui::MenuItem("Create Circle"))
 				m_Context->CreteCircle("circle");
 
+			if (ImGui::MenuItem("Create Triangle"))
+				m_Context->CreteTriangle("triangle");
+
 			ImGui::EndPopup();
 		}
 
@@ -210,6 +213,44 @@ namespace PhySim {
 				if (ImGui::MenuItem("Triangle"))
 				{
 					m_Context->m_Entities[m_SelectionIndex]->tc2d = new TriangleCollider2DComponent();
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			ImGui::EndPopup();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Remove Physics"))
+			ImGui::OpenPopup("RemoveComponent");
+
+		if (m_SelectionIndex != -1 && ImGui::BeginPopup("RemoveComponent"))
+		{
+			if (m_Context->m_Entities[m_SelectionIndex]->bc2d)
+			{
+				if (ImGui::MenuItem("Box"))
+				{
+					delete m_Context->m_Entities[m_SelectionIndex]->bc2d;
+					m_Context->m_Entities[m_SelectionIndex]->bc2d = nullptr;
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (m_Context->m_Entities[m_SelectionIndex]->cc2d)
+			{
+				if (ImGui::MenuItem("Circle"))
+				{
+					delete m_Context->m_Entities[m_SelectionIndex]->cc2d;
+					m_Context->m_Entities[m_SelectionIndex]->cc2d = nullptr;
+					ImGui::CloseCurrentPopup();
+				}
+			}
+
+			if (m_Context->m_Entities[m_SelectionIndex]->tc2d)
+			{
+				if (ImGui::MenuItem("Triangle"))
+				{
+					delete m_Context->m_Entities[m_SelectionIndex]->tc2d;
+					m_Context->m_Entities[m_SelectionIndex]->tc2d = nullptr;
 					ImGui::CloseCurrentPopup();
 				}
 			}

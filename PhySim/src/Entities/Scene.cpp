@@ -13,6 +13,9 @@
 #include "box2d/b2_polygon_shape.h"
 #include "box2d/b2_circle_shape.h"
 
+#include "Core/Input.h"
+#include "Core/KeyCodes.h"
+
 namespace PhySim {
 
 	static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)
@@ -49,6 +52,13 @@ namespace PhySim {
 	{
 		Entity* newEnt = new Entity(name, this);
 		newEnt->circleComponent = new CircleComponent();
+		AddEntity(newEnt);
+	}
+
+	void Scene::CreteTriangle(const std::string& name)
+	{
+		Entity* newEnt = new Entity(name, this);
+		newEnt->triangleComponent = new TriangleComponent();
 		AddEntity(newEnt);
 	}
 	
@@ -196,6 +206,11 @@ namespace PhySim {
 			}
 		}
 
+		if (Input::IsKeyPressed(Key::M))
+		{
+			if (m_Entities[1]->rb2d)
+				m_Entities[1]->rb2d->RuntimeBody->ApplyForce(b2Vec2(0, 50), m_Entities[1]->rb2d->RuntimeBody->GetWorldCenter(), 0);
+		}
 
 		OnUpdateEditor(ts);
 	}
